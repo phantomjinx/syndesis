@@ -15,10 +15,14 @@
  */
 package io.syndesis.server.jsondb.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * JsonRecord is used to hold that data stored in a database record.
  */
 public final class JsonRecord {
+
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final String path;
     private final String value;
@@ -51,5 +55,4 @@ public final class JsonRecord {
     public static JsonRecord of(String path, String value, String ovalue, String index) {
         return new JsonRecord(path, value, ovalue, index);
     }
-
 }

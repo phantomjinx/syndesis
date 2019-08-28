@@ -29,11 +29,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
-
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonStreamContext;
-
+import com.fasterxml.jackson.databind.JsonNode;
 import io.syndesis.server.jsondb.GetOptions;
 import io.syndesis.server.jsondb.JsonDBException;
 
@@ -80,9 +79,14 @@ class JsonRecordConsumer implements Consumer<JsonRecord>, Closeable {
             String path = record.getPath();
             path = Strings.trimSuffix(path.substring(base.length()), "/");
 
+            System.out.println("JsonRecordConsumer.accept() : JsonRecord Path: " + record.getPath());
+            System.out.println("JsonRecordConsumer.accept() : JsonRecord Value: " + record.getValue());
+
             // Lets see how much of the path we match compared to
             // when we last got called.
             List<String> newPath = new ArrayList<>(Arrays.asList(path.split("/")));
+            System.out.println("NEW PATH: " + newPath.size() + "\t" + path);
+
             if (newPath.size() == 1 && newPath.get(0).isEmpty()) {
                 newPath.clear();
             }
@@ -231,29 +235,9 @@ class JsonRecordConsumer implements Consumer<JsonRecord>, Closeable {
         closed = true;
     }
 
-
-
     private void writeValue(JsonRecord value) throws IOException {
-        switch (value.getValue().charAt(0)) {
-            case JsonRecordSupport.STRING_VALUE_PREFIX:
-                jg.writeString(value.getValue().substring(1));
-                break;
-            case JsonRecordSupport.NULL_VALUE_PREFIX:
-                jg.writeNull();
-                break;
-            case JsonRecordSupport.NEG_NUMBER_VALUE_PREFIX:
-            case NUMBER_VALUE_PREFIX:
-                jg.writeNumber(value.getOValue());
-                break;
-            case JsonRecordSupport.TRUE_VALUE_PREFIX:
-                jg.writeBoolean(true);
-                break;
-            case JsonRecordSupport.FALSE_VALUE_PREFIX:
-                jg.writeBoolean(false);
-                break;
-            default:
-                break;
-        }
+        JsonNode jsonObject = JsonRecord.OBJECT_MAPPER.readTree(value.getValue());
+        jsonObject.serialize(jg, null);
     }
 
     public boolean isClosed() {

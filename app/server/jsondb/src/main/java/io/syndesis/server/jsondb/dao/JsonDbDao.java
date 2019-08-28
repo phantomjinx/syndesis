@@ -38,6 +38,7 @@ import io.syndesis.server.dao.manager.DataAccessObject;
 import io.syndesis.server.dao.manager.operators.IdPrefixFilter;
 import io.syndesis.server.jsondb.GetOptions;
 import io.syndesis.server.jsondb.JsonDB;
+import io.syndesis.server.jsondb.impl.JsonRecord;
 
 /**
  * Implements a DataAccessObject using the {@see: JsonDB}.
@@ -69,6 +70,10 @@ public abstract class JsonDbDao<T extends WithId<T>> implements DataAccessObject
             if( json==null || json.length == 0 ) {
                 return null;
             }
+
+            String jsonString = new String(json);
+            System.out.println("JSON STRING: " + jsonString);
+
             return reader.forType(getType()).readValue(json);
         } catch (@SuppressWarnings("PMD.AvoidCatchingGenericException") RuntimeException|IOException e) {
             throw SyndesisServerException.launderThrowable(e);
@@ -106,6 +111,8 @@ public abstract class JsonDbDao<T extends WithId<T>> implements DataAccessObject
             ListResult<T> result;
             if( json!=null && json.length > 0 ) {
 
+                String jsonString = new String(json);
+                System.out.println("JSON STRING: " + jsonString);
                 // Lets use jackson to parse the map of keys to our model instances
                 TypeFactory typeFactory = reader.getTypeFactory();
                 MapType mapType = typeFactory.constructMapType(LinkedHashMap.class, String.class, getType());

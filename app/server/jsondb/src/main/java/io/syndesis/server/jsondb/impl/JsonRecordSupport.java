@@ -15,27 +15,28 @@
  */
 package io.syndesis.server.jsondb.impl;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import io.syndesis.server.jsondb.JsonDBException;
-
+import static io.syndesis.server.jsondb.impl.Strings.suffix;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import static com.fasterxml.jackson.core.JsonToken.END_ARRAY;
-import static com.fasterxml.jackson.core.JsonToken.END_OBJECT;
-import static com.fasterxml.jackson.core.JsonToken.FIELD_NAME;
-import static com.fasterxml.jackson.core.JsonToken.START_ARRAY;
-import static com.fasterxml.jackson.core.JsonToken.VALUE_NULL;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.syndesis.common.util.KeyGenerator;
+import io.syndesis.server.jsondb.JsonDBException;
 
 /**
  * Helper methods for converting between JsonRecord lists and Json
@@ -53,7 +54,6 @@ public final class JsonRecordSupport {
     public static final char NEG_NUMBER_VALUE_PREFIX = '-';
     public static final char STRING_VALUE_PREFIX = '`';
     public static final char ARRAY_VALUE_PREFIX = NUMBER_VALUE_PREFIX;
-
 
     static class PathPart {
         private final String path;
@@ -86,6 +86,7 @@ public final class JsonRecordSupport {
         // utility class
     }
 
+    // TODO Do we still need indexes??
     public static void jsonStreamToRecords(Set<String> indexes, String dbPath, InputStream is, Consumer<JsonRecord> consumer) throws IOException {
         try (JsonParser jp = new JsonFactory().createParser(is)) {
             jsonStreamToRecords(indexes, jp, dbPath, consumer);
@@ -124,73 +125,171 @@ public final class JsonRecordSupport {
             throw new JsonDBException("Invalid key. Cannot contain ., %, $, #, [, ], /, or ASCII control characters 0-31 or 127. Key: "+key);
         }
         if( key.length() > 768 ) {
-            throw new JsonDBException("Invalid key. Key cannot ben longer than 768 characters. Key: "+key);
+            throw new JsonDBException("Invalid key. Key cannot be longer than 768 characters. Key: "+key);
         }
         return key;
     }
 
-    public static void jsonStreamToRecords(Set<String> indexes, JsonParser jp, String path, Consumer<JsonRecord> consumer) throws IOException {
-        boolean inArray = false;
-        int arrayIndex = 0;
-        while (true) {
-            JsonToken nextToken = jp.nextToken();
+    private static final Pattern[] CHILD_RESOURCES = {
+        Pattern.compile("/integrations/.+?/flows/steps/connection")
+    };
 
-            String currentPath = path;
+    private static void applicableNodes(final String path, final JsonNode recordNode, final Map<String, ObjectNode> nodeRecordsMap) {
 
-            if (nextToken == FIELD_NAME) {
-                if (inArray) {
-                    currentPath = path + toArrayIndexPath(arrayIndex) + "/";
-                }
-                jsonStreamToRecords(indexes, jp, currentPath + validateKey(jp.getCurrentName()) + "/", consumer);
-            } else if (nextToken == VALUE_NULL) {
-                if (inArray) {
-                    currentPath = path + toArrayIndexPath(arrayIndex) + "/";
-                }
-                consumer.accept(JsonRecord.of(currentPath, String.valueOf(NULL_VALUE_PREFIX), "null", indexFieldValue(indexes, currentPath)));
-                if( inArray ) {
-                    arrayIndex++;
-                } else {
-                    return;
-                }
-            } else if (nextToken.isScalarValue()) {
-                if (inArray) {
-                    currentPath = path + toArrayIndexPath(arrayIndex) + "/";
-                }
+        recordNode.fields().forEachRemaining(fieldEntry -> {
+            String fieldName = fieldEntry.getKey();
+            JsonNode fieldNode = fieldEntry.getValue();
 
-                String value = jp.getValueAsString();
-                String ovalue = null;
+            String fieldPath = suffix(path, "/") + fieldName;
 
-                if( nextToken == JsonToken.VALUE_STRING ) {
-                    value = STRING_VALUE_PREFIX + value; //NOPMD
-                } else if( nextToken == JsonToken.VALUE_NUMBER_INT || nextToken == JsonToken.VALUE_NUMBER_FLOAT ) {
-                    ovalue = value; // hold on to the original number in th ovalue field.
-                    value = toLexSortableString(value); // encode it so we can lexically sort.
-                } else if( nextToken == JsonToken.VALUE_TRUE ) {
-                    ovalue = value;
-                    value = String.valueOf(TRUE_VALUE_PREFIX);
-                } else if( nextToken == JsonToken.VALUE_FALSE ) {
-                    ovalue = value;
-                    value = String.valueOf(FALSE_VALUE_PREFIX);
+            if (fieldNode.isArray()) {
+                for (JsonNode elNode : fieldNode) {
+                    //
+                    // Want to traverse these nodes but don't want to stream
+                    // them to their own records so don't pass in consumer
+                    //
+                    applicableNodes(fieldPath, elNode, nodeRecordsMap);
                 }
-
-                consumer.accept(JsonRecord.of(currentPath, value, ovalue, indexFieldValue(indexes, currentPath)));
-                if( inArray ) {
-                    arrayIndex++;
-                } else {
-                    return;
-                }
-            } else if (nextToken == END_OBJECT) {
-                if( inArray ) {
-                    arrayIndex++;
-                } else {
-                    return;
-                }
-            } else if (nextToken == START_ARRAY) {
-                inArray = true;
-            } else if (nextToken == END_ARRAY) {
                 return;
             }
+
+            //
+            // If fieldPath matches a child resource template then path
+            // will be stream to own record and stubbed with target url
+            //
+            for (Pattern pattern : CHILD_RESOURCES) {
+                if (pattern.matcher(fieldPath).matches()) {
+                    //
+                    // To be stored as separate record
+                    //
+                    nodeRecordsMap.put(fieldName,  (ObjectNode) recordNode);
+                    break;
+                }
+            }
+        });
+    }
+
+    private static void jsonStreamToRecord(final String path, final JsonNode recordNode,
+                                                                              final Consumer<JsonRecord> consumer) throws IOException {
+        System.out.println("jsonStreamToRecord() : " + path);
+        Map<String, ObjectNode> childNodesToRefactor = new LinkedHashMap<>();
+        applicableNodes(path, recordNode, childNodesToRefactor);
+
+        //
+        // Remove field & create url node instead
+        //
+        for (Entry<String, ObjectNode> entry : childNodesToRefactor.entrySet()) {
+            String fieldName = entry.getKey();
+            ObjectNode parent = entry.getValue();
+
+            //
+            // Remove the existing child node
+            // Find or create a unique id for the record
+            // Construct a new path
+            // Pass it to the consumer
+            //
+            JsonNode childToStore = parent.remove(fieldName);
+
+            String id = null;
+            JsonNode idNode = childToStore.get("id");
+            if (idNode != null) {
+                id = idNode.asText();
+            } else {
+                id = KeyGenerator.createKey();
+            }
+
+            String newPath = convertToDBPath("/" + fieldName + "s/:" + id);
+            System.out.println("Creating record for new path: " + newPath);
+            consumer.accept(JsonRecord.of(newPath, JsonRecord.OBJECT_MAPPER.writeValueAsString(childToStore), null, null));
+
+            //
+            // Generate new stub node with target pointing to new path
+            //
+            System.out.println("TARGET URL: " + newPath);
+            ObjectNode newChild = parent.objectNode();
+            newChild.put("target", newPath);
+
+            parent.replace(fieldName, newChild);
         }
+
+        //
+        // Create record of 'new' node
+        //
+        System.out.println("PATH TO STREAM: " + path);
+        consumer.accept(JsonRecord.of(path, JsonRecord.OBJECT_MAPPER.writeValueAsString(recordNode), null, null));
+    }
+
+    public static void jsonStreamToRecords(Set<String> indexes, JsonParser jp, String path, Consumer<JsonRecord> consumer) throws IOException {
+        System.out.println("Path: " + path);
+
+        JsonNode jsonNode = JsonRecord.OBJECT_MAPPER.readTree(jp);
+
+        jsonStreamToRecord(path, jsonNode, consumer);
+
+
+
+
+//        boolean inArray = false;
+//        int arrayIndex = 0;
+//        while (true) {
+//            JsonToken nextToken = jp.nextToken();
+//
+//            String currentPath = path;
+//
+//            if (nextToken == FIELD_NAME) {
+//                if (inArray) {
+//                    currentPath = path + toArrayIndexPath(arrayIndex) + "/";
+//                }
+//                jsonStreamToRecords(indexes, jp, currentPath + validateKey(jp.getCurrentName()) + "/", consumer);
+//            } else if (nextToken == VALUE_NULL) {
+//                if (inArray) {
+//                    currentPath = path + toArrayIndexPath(arrayIndex) + "/";
+//                }
+//                consumer.accept(JsonRecord.of(currentPath, String.valueOf(NULL_VALUE_PREFIX), "null", indexFieldValue(indexes, currentPath)));
+//                if( inArray ) {
+//                    arrayIndex++;
+//                } else {
+//                    return;
+//                }
+//            } else if (nextToken.isScalarValue()) {
+//                if (inArray) {
+//                    currentPath = path + toArrayIndexPath(arrayIndex) + "/";
+//                }
+//
+//                String value = jp.getValueAsString();
+//                String ovalue = null;
+//
+//                if( nextToken == JsonToken.VALUE_STRING ) {
+//                    value = STRING_VALUE_PREFIX + value; //NOPMD
+//                } else if( nextToken == JsonToken.VALUE_NUMBER_INT || nextToken == JsonToken.VALUE_NUMBER_FLOAT ) {
+//                    ovalue = value; // hold on to the original number in th ovalue field.
+//                    value = toLexSortableString(value); // encode it so we can lexically sort.
+//                } else if( nextToken == JsonToken.VALUE_TRUE ) {
+//                    ovalue = value;
+//                    value = String.valueOf(TRUE_VALUE_PREFIX);
+//                } else if( nextToken == JsonToken.VALUE_FALSE ) {
+//                    ovalue = value;
+//                    value = String.valueOf(FALSE_VALUE_PREFIX);
+//                }
+//
+//                consumer.accept(JsonRecord.of(currentPath, value, ovalue, indexFieldValue(indexes, currentPath)));
+//                if( inArray ) {
+//                    arrayIndex++;
+//                } else {
+//                    return;
+//                }
+//            } else if (nextToken == END_OBJECT) {
+//                if( inArray ) {
+//                    arrayIndex++;
+//                } else {
+//                    return;
+//                }
+//            } else if (nextToken == START_ARRAY) {
+//                inArray = true;
+//            } else if (nextToken == END_ARRAY) {
+//                return;
+//            }
+//        }
     }
 
     private static String indexFieldValue(Set<String> indexes, String path) {

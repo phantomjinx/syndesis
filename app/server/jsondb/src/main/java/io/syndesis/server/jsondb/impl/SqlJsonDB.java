@@ -20,7 +20,6 @@ import static io.syndesis.server.jsondb.impl.JsonRecordSupport.validateKey;
 import static io.syndesis.server.jsondb.impl.Strings.prefix;
 import static io.syndesis.server.jsondb.impl.Strings.suffix;
 import static io.syndesis.server.jsondb.impl.Strings.trimSuffix;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -42,7 +41,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.PreparedBatch;
@@ -54,12 +52,12 @@ import org.skife.jdbi.v2.util.IntegerColumnMapper;
 import org.skife.jdbi.v2.util.StringColumnMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.syndesis.common.util.EventBus;
 import io.syndesis.common.util.KeyGenerator;
 import io.syndesis.common.util.SyndesisServerException;
@@ -267,6 +265,7 @@ public class SqlJsonDB implements JsonDB, WithGlobalTransaction {
             for (Consumer<Query<Map<String, Object>>> bind : binds) {
                 bind.accept(query);
             }
+
             ResultIterator<JsonRecord> iterator = query.map(JsonRecordMapper.INSTANCE).iterator();
 
             try {
@@ -275,7 +274,9 @@ public class SqlJsonDB implements JsonDB, WithGlobalTransaction {
                     result = output -> {
                         try (JsonRecordConsumer toJson = new JsonRecordConsumer(baseDBPath, output, o)) {
                             while ( !toJson.isClosed() && iterator.hasNext() ) {
-                                toJson.accept(iterator.next());
+                                JsonRecord record = iterator.next();
+                                System.out.println("SqlJsonDB.getAsStreamingOutput() : SQL: " + sql.toString() + "\n\tlike: " + like + "\n\tFound Result: " + record.getValue());
+                                toJson.accept(record);
                             }
                         } catch (IOException e) {
                             throw new JsonDBException(e);
@@ -291,12 +292,27 @@ public class SqlJsonDB implements JsonDB, WithGlobalTransaction {
                     iterator.close();
                 }
             }
+
+//            JsonRecord record = query.map(JsonRecordMapper.INSTANCE).first();
+//             At this point we know if we can produce results..
+//            if (record != null) {
+//                result = output -> {
+//                    try (JsonRecordConsumer toJson = new JsonRecordConsumer(baseDBPath, output, o)) {
+//                        toJson.accept(record);
+//                    } catch (IOException e) {
+//                        throw new JsonDBException(e);
+//                    } finally {
+//                        h.close();
+//                    }
+//                };
+//            }
         } finally {
             // if we are producing results, then defer closing the handle
             if (result == null) {
                 h.close();
             }
         }
+
         return result;
     }
 
@@ -319,15 +335,29 @@ public class SqlJsonDB implements JsonDB, WithGlobalTransaction {
         withTransaction(handle -> handle.execute(sql, parameters));
     }
 
-    @Override
-    public boolean exists(String path) {
+    public int count(String path) {
         String baseDBPath = JsonRecordSupport.convertToDBPath(path);
         String like = baseDBPath+"%";
-        boolean rc[] = new boolean[]{false};
+        int rc[] = new int[]{0};
         withTransaction(dbi -> {
-            rc[0] = countJsonRecords(dbi, like) > 0;
+            rc[0] = countJsonRecords(dbi, like);
         });
         return rc[0];
+    }
+
+    public List<String> list(String path) {
+        String baseDBPath = JsonRecordSupport.convertToDBPath(path);
+        String like = baseDBPath+"%";
+        final List<String> rc = new ArrayList<String>();
+        withTransaction(dbi -> {
+            rc.addAll(listJsonRecordPaths(dbi, like));
+        });
+        return rc;
+    }
+
+    @Override
+    public boolean exists(String path) {
+        return count(path) > 0;
     }
 
     @Override
@@ -408,8 +438,15 @@ public class SqlJsonDB implements JsonDB, WithGlobalTransaction {
 
         public Consumer<JsonRecord> createSetConsumer() {
             return r -> {
+
+                String path = r.getPath();
+                if (countJsonRecords(dbi, path) > 0) {
+                    System.out.println("Not inserting path '" + path + "' since it already exists");
+                    return;
+                }
+
                 PreparedBatch insert = getInsertBatch();
-                insert.bind("path", r.getPath())
+                insert.bind("path", path)
                     .bind("value", r.getValue())
                     .bind("ovalue", r.getOValue())
                     .bind("idx", r.getIndex())
@@ -433,7 +470,6 @@ public class SqlJsonDB implements JsonDB, WithGlobalTransaction {
         public void flush() {
             if (batchSize > 0 && insertBatch != null) {
                 insertBatch.execute();
-
             }
         }
     }
@@ -541,6 +577,12 @@ public class SqlJsonDB implements JsonDB, WithGlobalTransaction {
         return  params;
     }
 
+    private List<String> listJsonRecordPaths(Handle dbi, String like) {
+        return dbi.createQuery("SELECT * from jsondb where path LIKE ?")
+            .bind(0, like)
+            .map(StringColumnMapper.INSTANCE).list();
+    }
+
     private int countJsonRecords(Handle dbi, String like) {
         Integer result = dbi.createQuery("SELECT COUNT(*) from jsondb where path LIKE ?")
             .bind(0, like)
@@ -552,6 +594,11 @@ public class SqlJsonDB implements JsonDB, WithGlobalTransaction {
         private static final JsonRecordMapper INSTANCE = new JsonRecordMapper();
         @Override
         public JsonRecord map(int index, ResultSet r, StatementContext ctx) throws SQLException {
+            System.out.println("JsonRecordMapper.map():");
+            System.out.println("\tPATH: " + r.getString("path"));
+            System.out.println("\tVALUE: " + r.getString("value"));
+            System.out.println("\tOVALUE: " + r.getString("ovalue"));
+
             return JsonRecord.of(r.getString("path"), r.getString("value"), r.getString("ovalue"), null);
         }
     }
