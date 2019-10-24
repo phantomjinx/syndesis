@@ -26,7 +26,7 @@
 
   <groupId>io.syndesis</groupId>
   <artifactId>syndesis-parent</artifactId>
-  <version>1.8.6</version>
+  <version>1.8.6.fuse-750001</version>
   <packaging>pom</packaging>
 
   <name>Syndesis</name>
@@ -37,7 +37,7 @@
     <syndesis.version>${project.version}</syndesis.version>
 
     <!-- Atlasmap version -->
-    <atlasmap.version>1.42.9</atlasmap.version>
+    <atlasmap.version>1.42.9.fuse-750003</atlasmap.version>
 
     <!-- Image names -->
     <image.s2i>syndesis/syndesis-s2i:%l</image.s2i>
@@ -45,19 +45,19 @@
     <image.meta>syndesis/syndesis-meta:%l</image.meta>
     <image.ui>syndesis/syndesis-ui:%l</image.ui>
 
-    <fabric8.maven.plugin.version>4.2.0</fabric8.maven.plugin.version>
+    <fabric8.maven.plugin.version>3.5.33.fuse-750033</fabric8.maven.plugin.version>
     <maven.exec.plugin.version>1.2.1</maven.exec.plugin.version>
     <dep.plugin.deploy.version>2.8.2</dep.plugin.deploy.version>
     <clean-maven-plugin-version>2.4.1</clean-maven-plugin-version>
     <frontend-maven-plugin-version>1.6</frontend-maven-plugin-version>
-    <node.version>v10.15.1</node.version>
-    <yarn.version>v1.13.0</yarn.version>
+    <node.version>v10.16.0</node.version>
+    <yarn.version>v1.9.4</yarn.version>
 
     <hibernate.validator.version>6.0.16.Final</hibernate.validator.version>
 
     <jackson.version>2.9.9</jackson.version>
     <json-patch.version>1.9</json-patch.version>
-    <kubernetes.client.version>3.1.12.fuse-740022-redhat-00001</kubernetes.client.version>
+    <kubernetes.client.version>3.1.12.fuse-750023</kubernetes.client.version>
 
     <spring.version>4.3.18.RELEASE</spring.version>
     <spring-boot.version>1.5.16.RELEASE</spring-boot.version>
@@ -77,8 +77,8 @@
     <commons.compress.version>1.18</commons.compress.version>
 
     <!-- Global camel version used everywhere -->
-    <camel.version>2.21.0.fuse-750029</camel.version>
-    <camel-k-runtime.version>0.3.4.fuse-740009-redhat-00002</camel-k-runtime.version>
+    <camel.version>2.21.0.fuse-750033</camel.version>
+    <camel-k-runtime.version>0.3.4.fuse-750025</camel-k-runtime.version>
 
     <!-- Don't fork based on cores, doesn't work nicely in the cloud -->
     <basepom.test.fork-count>1</basepom.test.fork-count>
@@ -208,51 +208,6 @@
       <id>release</id>
       <build>
         <plugins>
-
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-deploy-plugin</artifactId>
-            <configuration>
-              <skip>true</skip>
-            </configuration>
-          </plugin>
-
-          <plugin>
-            <groupId>org.sonatype.plugins</groupId>
-            <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>1.6.8</version>
-            <executions>
-              <execution>
-                <id>default-deploy</id>
-                <phase>deploy</phase>
-                <goals>
-                  <goal>deploy</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-              <serverId>oss-sonatype-staging</serverId>
-            </configuration>
-          </plugin>
-
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.6</version>
-            <configuration>
-              <skip>false</skip>
-            </configuration>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
 
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
