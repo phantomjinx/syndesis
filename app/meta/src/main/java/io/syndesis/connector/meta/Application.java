@@ -17,12 +17,9 @@ package io.syndesis.connector.meta;
 
 
 import javax.servlet.Filter;
-
-import io.syndesis.connector.support.verifier.api.MetadataRetrieval;
-import io.syndesis.connector.support.verifier.api.Verifier;
 import org.apache.camel.CamelContext;
 import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.camel.impl.ExplicitCamelContextNameStrategy;
+import org.apache.camel.impl.engine.ExplicitCamelContextNameStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -33,6 +30,8 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
+import io.syndesis.connector.support.verifier.api.MetadataRetrieval;
+import io.syndesis.connector.support.verifier.api.Verifier;
 
 /**
  * @author roland
