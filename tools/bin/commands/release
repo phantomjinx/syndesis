@@ -56,6 +56,35 @@ get_release_version() {
 
 release::run() {
     source "$(basedir)/commands/util/maven_funcs"
+    source "$(basedir)/commands/util/operator_funcs"
+
+    # Main application directory
+    local topdir=$(appdir ".")
+
+    # Validate release versions. Release versions have the foramt "1.3.4"
+    local release_version=$(get_release_version)
+    check_error $release_version
+
+    # Get the Syndesis minor version (e.g. "1.3")
+    local moving_tag=$(extract_minor_version $release_version)
+    check_error $moving_tag
+    # Create the operator image binaries
+
+    if ! [[ $(hasflag --snapshot-release) ]]; then
+        # Prepare binaries for release
+        prepare_binaries "${topdir}/install/operator/dist" "${topdir}/install/operator/releases"
+
+        # Release the binaries
+        publish_artifacts "${topdir}/install/operator/releases" "$release_version"
+
+        # Create release description based on commit between releases
+        if check_for_command gren; then
+            gren release --data-source=commits --tags=$release_version --override
+        fi
+    fi
+}
+release::run_() {
+    source "$(basedir)/commands/util/maven_funcs"
 
     # Main application directory
     local topdir=$(appdir ".")
@@ -148,6 +177,11 @@ release::run() {
 
         # Release the binaries
         publish_artifacts "${topdir}/install/operator/releases" "$release_version"
+
+        # Create release description based on commit between releases
+        if ! check_for_command gren; then
+            gren release --data-source=commits --tags=$release_version
+        fi
     fi
 }
 
@@ -240,7 +274,6 @@ get_github_username() {
         echo "Please populate it with your github id"
         return 1
     fi
-    echo $GITHUB_USERNAME
 }
 
 get_github_access_token() {
@@ -249,7 +282,14 @@ get_github_access_token() {
         echo "Please populate it with a valid personal access token from github (with 'repo', 'admin:org_hook' and 'admin:repo_hook' scopes)."
         return 1
     fi
-    echo $GITHUB_ACCESS_TOKEN
+}
+
+get_gren_access_token() {
+    if [ -z "${GREN_GITHUB_TOKEN:-}" ]; then
+        echo "ERROR: environment variable GREN_GITHUB_TOKEN has not been set."
+        echo "Please populate it with a valid personal access token from github (with 'repo', 'admin:org_hook' and 'admin:repo_hook' scopes)."
+        return 1
+    fi
 }
 
 prepare_binaries() {
@@ -282,54 +322,36 @@ get_gh_release_name() {
     echo ${name}
 }
 
-get_gh_release_desc() {
-    local desc="Please follow the instructions at http://syndesis.io/quickstart/ to install syndesis."
-    local commit_history=""
-
-    previous_release_commit=$(curl -s --fail https://api.github.com/repos/syndesisio/syndesis/releases/latest | \
-        grep  target_commitish | \
-        cut -d '"' -f 4)
-
-    if [[ -z $previous_release_commit ]]; then
-        echo "WARNING: Unable to fetch previous release commit"
-    else
-        commit_history=$(git log --pretty=format:"%h - %s" ${previous_release_commit}..HEAD)
-    fi
-
-    desc="${desc}\n\n$commit_history"
-
-    echo ${desc}
-}
-
 publish_artifacts() {
     local release_dir=$1
     local tag=$2
 
     local release_name=$(get_gh_release_name ${tag})
-    local desc=$(get_gh_release_desc)
 
     get_github_access_token
     get_github_username
+    get_gren_access_token
 
-    local data="{
-	  \"tag_name\": \"${tag}\",
-	  \"name\": \"${release_name}\",
-	  \"body\": \"${desc}\"}
-	"
-	local upload_url=$(curl -q --fail \
+    local data="{\
+        \"tag_name\": \"${tag}\", \
+        \"name\": \"${release_name}\" \
+    }"
+
+	local upload_url=$(curl -q -s --fail \
       -X POST \
       -u $GITHUB_USERNAME:$GITHUB_ACCESS_TOKEN \
       -H "Accept: application/vnd.github.v3+json" \
       -H "Content-Type: application/json" \
       -d "$data" \
-      https://api.github.com/repos/syndesisio/syndesis/releases | jq -r '.upload_url | sub("{.*"; "")'
+      https://api.github.com/repos/lgarciaaco/syndesis/releases | jq -r '.upload_url | sub("{.*"; "")')
+
     if [[ ! $upload_url == http* ]]; then
         echo "ERROR: Cannot create release on remote github repository. Check if a release with the same tag already exists."
         return
     fi
 
     for file in $release_dir/*; do
-        curl -q --fail -X POST -u $GITHUB_USERNAME:$GITHUB_ACCESS_TOKEN \
+        curl -q -s --fail -X POST -u $GITHUB_USERNAME:$GITHUB_ACCESS_TOKEN \
           -H "Accept: application/vnd.github.v3+json" \
           -H "Content-Type: application/tar+gzip" \
           --data-binary "@$file" \
