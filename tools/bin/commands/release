@@ -269,7 +269,7 @@ update_image_versions() {
 }
 
 check_github_username() {
-    if [ -z "${GITHUB_USERNAME:-}" ]; then
+    if [ -z "${GITHUB_USERNAME}" ]; then
         echo "ERROR: environment variable GITHUB_USERNAME has not been set."
         echo "Please populate it with your github id"
         return 1
@@ -277,15 +277,15 @@ check_github_username() {
 }
 
 check_github_access_token() {
-    if [ -z "${GITHUB_ACCESS_TOKEN:-}" ]; then
+    if [ -z "${GITHUB_ACCESS_TOKEN}" ]; then
         echo "ERROR: environment variable GITHUB_ACCESS_TOKEN has not been set."
         echo "Please populate it with a valid personal access token from github (with 'repo', 'admin:org_hook' and 'admin:repo_hook' scopes)."
-        return 1
+        #return 1
     fi
 }
 
 check_gren_access_token() {
-    if [ -z "${GREN_GITHUB_TOKEN:-}" ]; then
+    if [ -z "${GREN_GITHUB_TOKEN}" ]; then
         echo "ERROR: environment variable GREN_GITHUB_TOKEN has not been set."
         echo "Please populate it with a valid personal access token from github (with 'repo', 'admin:org_hook' and 'admin:repo_hook' scopes)."
         return 1
@@ -329,9 +329,9 @@ publish_artifacts() {
 
     local release_name=$(get_gh_release_name ${tag})
 
-    if check_github_access_token || check_github_username || check_gren_access_token; then
-        return 1
-    fi
+    check_github_access_token
+    check_github_username
+    check_gren_access_token
 
     local data="{\
         \"tag_name\": \"${tag}\", \
