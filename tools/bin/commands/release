@@ -306,8 +306,7 @@ prepare_binaries() {
     fi
 
     for dist in darwin-amd64 linux-amd64 windows-amd64; do
-        echo
-        # cp ${from}/${dist}/syndesis-operator ${to}/syndesis-operator-${dist}
+        cp ${from}/${dist}/syndesis-operator ${to}/syndesis-operator-${dist}
     done
 }
 
