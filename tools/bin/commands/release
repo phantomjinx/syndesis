@@ -68,34 +68,6 @@ release::run() {
     # Get the Syndesis minor version (e.g. "1.3")
     local moving_tag=$(extract_minor_version $release_version)
     check_error $moving_tag
-    # Create the operator image binaries
-
-    if ! [[ $(hasflag --snapshot-release) ]]; then
-        # Prepare binaries for release
-        prepare_binaries "${topdir}/install/operator/dist" "${topdir}/install/operator/releases"
-
-        # Release the binaries
-        publish_artifacts "${topdir}/install/operator/releases" "$release_version"
-
-        # Create release description based on commit between releases
-        if check_for_command gren; then
-            gren release --data-source=commits --tags=$release_version --override
-        fi
-    fi
-}
-release::run_() {
-    source "$(basedir)/commands/util/maven_funcs"
-
-    # Main application directory
-    local topdir=$(appdir ".")
-
-    # Validate release versions. Release versions have the foramt "1.3.4"
-    local release_version=$(get_release_version)
-    check_error $release_version
-
-    # Get the Syndesis minor version (e.g. "1.3")
-    local moving_tag=$(extract_minor_version $release_version)
-    check_error $moving_tag
 
     # Write to logfile if requested
     if [ $(readopt --log) ]; then
@@ -171,18 +143,16 @@ release::run_() {
     update_image_versions "$topdir" "$release_version" "$moving_tag"
     "$topdir/install/operator/build.sh" --operator-build docker --image-build docker --image-name "syndesis/syndesis-operator" --image-tag "$release_version"
 
-    if ! [[ $(hasflag --snapshot-release) ]]; then
-        # Prepare binaries for release
-        prepare_binaries "${topdir}/install/operator/dist" "${topdir}/install/operator/releases"
+    # Prepare binaries for release
+    prepare_binaries "${topdir}/install/operator/dist" "${topdir}/install/operator/releases"
 
-        # Release the binaries
-        publish_artifacts "${topdir}/install/operator/releases" "$release_version"
+    # Release the binaries
+    publish_artifacts "${topdir}/install/operator/releases" "$release_version"
 
-        # Create release description based on commit between releases
-        if ! check_for_command gren; then
-            gren release --data-source=commits --tags=$release_version
-        fi
-    fi
+    # Create release description based on commit between releases
+    # if check_for_command gren; then
+    #    gren release --data-source=commits --tags=$release_version --override
+    # fi
 }
 
 create_moving_tag_release() {
@@ -280,7 +250,7 @@ check_github_access_token() {
     if [ -z "${GITHUB_ACCESS_TOKEN}" ]; then
         echo "ERROR: environment variable GITHUB_ACCESS_TOKEN has not been set."
         echo "Please populate it with a valid personal access token from github (with 'repo', 'admin:org_hook' and 'admin:repo_hook' scopes)."
-        #return 1
+        return 1
     fi
 }
 
@@ -310,40 +280,33 @@ prepare_binaries() {
     done
 }
 
-get_gh_release_name() {
-    local tag=$1
-    local current_branch=$(git rev-parse --abbrev-ref HEAD)
-    local name=${tag}
-
-    if [[ "${current_branch}" == "master" ]]; then
-        name="${tag}-${current_branch}"
-    fi
-
-    echo ${name}
-}
-
 publish_artifacts() {
     local release_dir=$1
     local tag=$2
-
-    local release_name=$(get_gh_release_name ${tag})
+    local prerelease=false
 
     check_github_access_token
     check_github_username
-    check_gren_access_token
+    # check_gren_access_token
+
+    if [[ $(hasflag --snapshot-release) ]]; then
+        prerelease=true
+    fi
 
     local data="{\
         \"tag_name\": \"${tag}\", \
-        \"name\": \"${release_name}\" \
+        \"name\": \"${tag}\", \
+        \"prerelease\": ${prerelease} \
     }"
 
-	local upload_url=$(curl -q -s --fail \
+    local upload_url=$(curl -q -s --fail \
       -X POST \
       -u $GITHUB_USERNAME:$GITHUB_ACCESS_TOKEN \
       -H "Accept: application/vnd.github.v3+json" \
       -H "Content-Type: application/json" \
       -d "$data" \
-      https://api.github.com/repos/lgarciaaco/syndesis/releases | jq -r '.upload_url | sub("{.*"; "")')
+      https://api.github.com/repos/syndesisio/syndesis/releases | jq -r '.upload_url | sub("{.*"; "")'
+    )
 
     if [[ ! $upload_url == http* ]]; then
         echo "ERROR: Cannot create release on remote github repository. Check if a release with the same tag already exists."
@@ -351,10 +314,11 @@ publish_artifacts() {
     fi
 
     for file in $release_dir/*; do
+        tar -zcvf ${file}.tar.gz ${file}
         curl -q -s --fail -X POST -u $GITHUB_USERNAME:$GITHUB_ACCESS_TOKEN \
           -H "Accept: application/vnd.github.v3+json" \
           -H "Content-Type: application/tar+gzip" \
-          --data-binary "@$file" \
+          --data-binary "@${file}.tar.gz" \
           $upload_url?name=${file##*/}
         local err=$?
         if [ $err -ne 0 ]; then
