@@ -233,7 +233,7 @@ func (o *Install) installForge() error {
 		addonDir := "./addons/" + addon + "/"
 		f, err := generator.GetAssetsFS().Open(addonDir)
 		if err != nil {
-			fmt.Printf("unsupported addon configured", "addon", addon, "error", err)
+			fmt.Println("unsupported addon configured", "addon", addon, "error", err)
 			return err
 		}
 		f.Close()
