@@ -91,7 +91,7 @@ public class MetadataService extends DvService implements ServiceVdbGenerator.Sc
     /**
      * fqn table option key
      */
-    public static final String TABLE_OPTION_FQN = AbstractMetadataRecord.RELATIONAL_URI+"fqn"; //$NON-NLS-1$
+    public static final String TABLE_OPTION_FQN = AbstractMetadataRecord.RELATIONAL_PREFIX+"fqn"; //$NON-NLS-1$
 
     @Autowired
     private MetadataInstance metadataInstance;
