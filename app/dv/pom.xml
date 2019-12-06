@@ -307,11 +307,6 @@
       </dependency>
       <dependency>
         <groupId>org.teiid</groupId>
-        <artifactId>teiid-admin</artifactId>
-        <version>${version.org.teiid}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.teiid</groupId>
         <artifactId>teiid-client</artifactId>
         <version>${version.org.teiid}</version>
       </dependency>
