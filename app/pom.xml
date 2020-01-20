@@ -26,7 +26,7 @@
 
   <groupId>io.syndesis</groupId>
   <artifactId>syndesis-parent</artifactId>
-  <version>1.9-SNAPSHOT</version>
+  <version>1.9.0.fuse-760011</version>
   <packaging>pom</packaging>
 
   <name>Syndesis</name>
@@ -39,7 +39,7 @@
     <deploy.archives>false</deploy.archives>
 
     <!-- Atlasmap version -->
-    <atlasmap.version>1.42.10</atlasmap.version>
+    <atlasmap.version>1.42.10.fuse-760002</atlasmap.version>
 
     <!-- Image names -->
     <image.s2i>syndesis/syndesis-s2i:%l</image.s2i>
@@ -48,13 +48,13 @@
     <image.ui>syndesis/syndesis-ui:%l</image.ui>
     <image.dv>syndesis/syndesis-dv:%l</image.dv>
 
-    <fabric8.maven.plugin.version>4.2.0</fabric8.maven.plugin.version>
+    <fabric8.maven.plugin.version>3.5.42.fuse-760018</fabric8.maven.plugin.version>
     <maven.exec.plugin.version>1.2.1</maven.exec.plugin.version>
     <dep.plugin.deploy.version>2.8.2</dep.plugin.deploy.version>
     <clean-maven-plugin-version>2.4.1</clean-maven-plugin-version>
     <frontend-maven-plugin-version>1.8.0</frontend-maven-plugin-version>
-    <node.version>v10.15.1</node.version>
-    <yarn.version>v1.13.0</yarn.version>
+    <node.version>v10.16.0</node.version>
+    <yarn.version>v1.9.4</yarn.version>
 
     <hibernate.validator.version>6.0.16.Final</hibernate.validator.version>
 
@@ -91,7 +91,7 @@
     <opentracing.spring.web.starter.version>3.0.0</opentracing.spring.web.starter.version>
 
     <!-- Global camel version used everywhere -->
-    <camel.version>2.23.2.fuse-760017</camel.version>
+    <camel.version>2.23.2.fuse-760022</camel.version>
     <camel-k-runtime.version>0.3.4.fuse-740009-redhat-00002</camel-k-runtime.version>
 
     <!-- Don't fork based on cores, doesn't work nicely in the cloud -->
@@ -149,7 +149,7 @@
     <postgresql.version>9.1-901-1.jdbc4</postgresql.version>
     <logback.version>1.2.3</logback.version>
     <micrometer.version>1.2.0</micrometer.version>
-    <teiid.version>13.0.0.fuse-760004</teiid.version>
+    <teiid.version>13.0.2.fuse-760004</teiid.version>
     <aws-java-sdk-core.version>1.11.415</aws-java-sdk-core.version>
 
     <javac.werror>-Werror</javac.werror>
@@ -232,51 +232,6 @@
       <id>release</id>
       <build>
         <plugins>
-
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-deploy-plugin</artifactId>
-            <configuration>
-              <skip>true</skip>
-            </configuration>
-          </plugin>
-
-          <plugin>
-            <groupId>org.sonatype.plugins</groupId>
-            <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>1.6.8</version>
-            <executions>
-              <execution>
-                <id>default-deploy</id>
-                <phase>deploy</phase>
-                <goals>
-                  <goal>deploy</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-              <serverId>oss-sonatype-staging</serverId>
-            </configuration>
-          </plugin>
-
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.6</version>
-            <configuration>
-              <skip>false</skip>
-            </configuration>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
 
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
