@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/syndesisio/syndesis/install/operator/pkg/syndesis/configuration"
 	"github.com/syndesisio/syndesis/install/operator/pkg/syndesis/upgrade"
 
 	"github.com/syndesisio/syndesis/install/operator/pkg"
@@ -42,6 +43,8 @@ func (a *upgradeAction) CanExecute(syndesis *v1beta1.Syndesis) bool {
 }
 
 func (a *upgradeAction) Execute(ctx context.Context, syndesis *v1beta1.Syndesis) error {
+	configuration.DebugLogger.Println("Executing upgradeAction", syndesis.Status.Phase)
+
 	targetVersion := pkg.DefaultOperatorTag
 
 	if syndesis.Status.Phase == v1beta1.SyndesisPhaseUpgrading {

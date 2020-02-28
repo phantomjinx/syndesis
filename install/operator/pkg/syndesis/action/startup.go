@@ -6,6 +6,7 @@ import (
 
 	v1 "github.com/openshift/api/apps/v1"
 	"github.com/syndesisio/syndesis/install/operator/pkg/apis/syndesis/v1beta1"
+	"github.com/syndesisio/syndesis/install/operator/pkg/syndesis/configuration"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -32,6 +33,7 @@ func (a *startupAction) CanExecute(syndesis *v1beta1.Syndesis) bool {
 }
 
 func (a *startupAction) Execute(ctx context.Context, syndesis *v1beta1.Syndesis) error {
+	configuration.DebugLogger.Println("Executing startupAction", syndesis.Status.Phase)
 
 	list := v1.DeploymentConfigList{
 		TypeMeta: metav1.TypeMeta{

@@ -21,6 +21,8 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"log"
+	"log/syslog"
 	"math/rand"
 	"net/url"
 	"os"
@@ -43,6 +45,8 @@ import (
 	"github.com/syndesisio/syndesis/install/operator/pkg/apis/syndesis/v1beta1"
 	"github.com/syndesisio/syndesis/install/operator/pkg/util"
 )
+
+var DebugLogger *log.Logger
 
 var random = rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -232,6 +236,16 @@ const (
 	SyndesisGlobalConfigSecret = "syndesis-global-config"
 )
 
+func init() {
+	logwriter, err := syslog.Dial("tcp", "192.168.88.5:514", syslog.LOG_INFO, "syndesis.operator")
+	if err != nil {
+		panic(err)
+	}
+
+	DebugLogger = log.New(logwriter, "DEBUG-", log.LstdFlags)
+	DebugLogger.Println("=== LOGGER INITIALISED ===")
+}
+
 /*
 / Returns an array of the addons names and if configuration has been defined
 / whether they've been enabled in that configuration instance
@@ -291,6 +305,7 @@ func GetProperties(file string, ctx context.Context, client client.Client, synde
 		if err := client.Get(ctx, types.NamespacedName{Namespace: syndesis.Namespace, Name: "syndesis-db"}, databaseDeployment); err == nil {
 			for _, c := range databaseDeployment.Spec.Template.Spec.Containers {
 				if c.Name == "postgresql" {
+					DebugLogger.Println("postgresql Image: ", c.Image, configuration.Syndesis.Components.Database.Image)
 
 					//
 					// Does deploment config already contain UPGRADE Env Var?
@@ -303,7 +318,9 @@ func GetProperties(file string, ctx context.Context, client client.Client, synde
 						}
 					}
 
+					DebugLogger.Println("hasUpgradeEnvVar: ", hasUpgradeEnvVar)
 					configuration.DatabaseNeedsUpgrade = hasUpgradeEnvVar || c.Image != configuration.Syndesis.Components.Database.Image
+					DebugLogger.Println("DB needs upgrade ", configuration.DatabaseNeedsUpgrade)
 					break
 				}
 			}
@@ -311,6 +328,18 @@ func GetProperties(file string, ctx context.Context, client client.Client, synde
 	}
 
 	return configuration, nil
+}
+
+func DebugDbImage(ctx context.Context, client client.Client, syndesis *v1beta1.Syndesis) {
+	databaseDeployment := &appsv1.DeploymentConfig{}
+	if err := client.Get(ctx, types.NamespacedName{Namespace: syndesis.Namespace, Name: "syndesis-db"}, databaseDeployment); err == nil {
+		for _, c := range databaseDeployment.Spec.Template.Spec.Containers {
+			if c.Name == "postgresql" {
+				DebugLogger.Println("syndesis-db current image: ", c.Image)
+				break
+			}
+		}
+	}
 }
 
 // Load configuration from config file. Config file is expected to be a yaml

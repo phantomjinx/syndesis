@@ -8,6 +8,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/syndesisio/syndesis/install/operator/pkg/apis/syndesis/v1beta1"
+	"github.com/syndesisio/syndesis/install/operator/pkg/syndesis/configuration"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -30,6 +31,8 @@ func (a *initializeAction) CanExecute(syndesis *v1beta1.Syndesis) bool {
 }
 
 func (a *initializeAction) Execute(ctx context.Context, syndesis *v1beta1.Syndesis) error {
+	configuration.DebugLogger.Println("Executing initializeAction", syndesis.Status.Phase)
+
 	list := v1beta1.SyndesisList{}
 	err := a.client.List(ctx, &list, &client.ListOptions{Namespace: syndesis.Namespace})
 	if err != nil {

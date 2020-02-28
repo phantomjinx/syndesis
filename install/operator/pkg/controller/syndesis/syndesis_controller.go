@@ -20,6 +20,7 @@ import (
 
 	syndesisv1beta1 "github.com/syndesisio/syndesis/install/operator/pkg/apis/syndesis/v1beta1"
 	"github.com/syndesisio/syndesis/install/operator/pkg/syndesis/action"
+	"github.com/syndesisio/syndesis/install/operator/pkg/syndesis/configuration"
 )
 
 var log = logf.Log.WithName("controller")
@@ -120,7 +121,10 @@ func (r *ReconcileSyndesis) Reconcile(request reconcile.Request) (reconcile.Resu
 			}, nil
 		}
 
+		configuration.DebugLogger.Println("Action a -> ", reflect.TypeOf(a), "can execute -> ", a.CanExecute(syndesis))
+
 		if a.CanExecute(syndesis) {
+			configuration.DebugLogger.Println("Executing a -> ", reflect.TypeOf(a))
 			log.V(2).Info("Running action", "action", reflect.TypeOf(a))
 			if err := a.Execute(ctx, syndesis); err != nil {
 				log.Error(err, "Error reconciling", "action", reflect.TypeOf(a), "phase", syndesis.Status.Phase)

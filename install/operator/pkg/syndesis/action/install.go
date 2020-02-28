@@ -63,6 +63,8 @@ func (a *installAction) CanExecute(syndesis *v1beta1.Syndesis) bool {
 var kindsReportedNotAvailable = map[schema.GroupVersionKind]time.Time{}
 
 func (a *installAction) Execute(ctx context.Context, syndesis *v1beta1.Syndesis) error {
+	configuration.DebugLogger.Println("Executing installAction", syndesis.Status.Phase)
+
 	if syndesisPhaseIs(syndesis, v1beta1.SyndesisPhaseInstalling) {
 		a.log.Info("installing Syndesis resource", "name", syndesis.Name)
 	} else if syndesisPhaseIs(syndesis, v1beta1.SyndesisPhasePostUpgradeRun) {

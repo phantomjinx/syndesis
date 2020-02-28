@@ -27,6 +27,7 @@ import (
 	cron "github.com/robfig/cron/v3"
 	"github.com/syndesisio/syndesis/install/operator/pkg/apis/syndesis/v1beta1"
 	"github.com/syndesisio/syndesis/install/operator/pkg/syndesis/backup"
+	"github.com/syndesisio/syndesis/install/operator/pkg/syndesis/configuration"
 )
 
 var c = cron.New()
@@ -50,6 +51,8 @@ func (a *backupAction) CanExecute(syndesis *v1beta1.Syndesis) bool {
 
 // Schedule a cronjob for systematic backups
 func (a *backupAction) Execute(ctx context.Context, syndesis *v1beta1.Syndesis) error {
+	configuration.DebugLogger.Println("Executing backupAction", syndesis.Status.Phase)
+
 	entries := c.Entries()
 
 	if s := syndesis.Spec.Backup.Schedule; s != "" {

@@ -9,6 +9,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/syndesisio/syndesis/install/operator/pkg/apis/syndesis/v1beta1"
+	"github.com/syndesisio/syndesis/install/operator/pkg/syndesis/configuration"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -32,14 +33,18 @@ func (a checkUpdatesAction) CanExecute(syndesis *v1beta1.Syndesis) bool {
 }
 
 func (a checkUpdatesAction) Execute(ctx context.Context, syndesis *v1beta1.Syndesis) error {
+	configuration.DebugLogger.Println("Executing checkUpdatesAction", syndesis.Status.Phase)
+
 	if a.operatorVersion == "" {
 		a.operatorVersion = pkg.DefaultOperatorTag
 	}
 
 	if syndesis.Status.Version == a.operatorVersion {
+		configuration.DebugLogger.Println("syndesis version & operator version the same so no upgrade needed", syndesis.Status.Phase)
 		// Everything fine
 		return nil
 	} else {
+		configuration.DebugLogger.Println("Setting phase to upgrading", syndesis.Status.Phase)
 		return a.setPhaseToUpgrading(ctx, syndesis)
 	}
 }
