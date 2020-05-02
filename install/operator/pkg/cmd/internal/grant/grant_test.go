@@ -21,9 +21,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/syndesisio/syndesis/install/operator/pkg/cmd/internal"
+	"github.com/syndesisio/syndesis/install/operator/pkg/generator"
 	v1 "k8s.io/api/rbac/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -35,6 +39,19 @@ const (
 	succeed = "\u2713"
 	failed  = "\u2717"
 )
+
+func TestRender(t *testing.T) {
+	ctx := context.TODO()
+	g := &Grant{
+		Options: &internal.Options{Namespace: ns, Context: ctx},
+		Role:    "MyRole",
+		User:    "MyUser",
+	}
+
+	resources, err := generator.Render("./install/grant", g)
+	require.NoError(t, err)
+	assert.NotEqual(t, 0, len(resources), "Failed to render")
+}
 
 // test grant without --cluster options
 func TestGrant(t *testing.T) {

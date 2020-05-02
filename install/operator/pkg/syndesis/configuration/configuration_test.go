@@ -32,9 +32,46 @@ import (
 
 	"github.com/syndesisio/syndesis/install/operator/pkg/apis/syndesis/v1beta1"
 	"github.com/syndesisio/syndesis/install/operator/pkg/syndesis/capabilities"
+	"github.com/syndesisio/syndesis/install/operator/pkg/syndesis/clienttools"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	discoveryfake "k8s.io/client-go/discovery/fake"
 )
+
+func Test_GetAddons(t *testing.T) {
+	config := getConfigLiteral()
+	addons := GetAddonsInfo(*config)
+
+	assert.True(t, len(addons) > 0)
+
+	for _, addon := range addons {
+		switch addon.Name() {
+		case "jaeger":
+			assert.Equal(t, config.Syndesis.Addons.Jaeger.Name(), addon.Name())
+			assert.Equal(t, config.Syndesis.Addons.Jaeger.Enabled, addon.IsEnabled())
+			assert.Equal(t, config.Syndesis.Addons.Jaeger.Olm, *addon.GetOlmSpec())
+		case "ops":
+			assert.Equal(t, config.Syndesis.Addons.Ops.Name(), addon.Name())
+			assert.Equal(t, config.Syndesis.Addons.Ops.Enabled, addon.IsEnabled())
+		case "dv":
+			assert.Equal(t, config.Syndesis.Addons.DV.Name(), addon.Name())
+			assert.Equal(t, config.Syndesis.Addons.DV.Enabled, addon.IsEnabled())
+		case "camelk":
+			assert.Equal(t, config.Syndesis.Addons.CamelK.Name(), addon.Name())
+			assert.Equal(t, config.Syndesis.Addons.CamelK.Enabled, addon.IsEnabled())
+		case "knative":
+			assert.Equal(t, config.Syndesis.Addons.Knative.Name(), addon.Name())
+			assert.Equal(t, config.Syndesis.Addons.Knative.Enabled, addon.IsEnabled())
+		case "todo":
+			assert.Equal(t, config.Syndesis.Addons.Todo.Name(), addon.Name())
+			assert.Equal(t, config.Syndesis.Addons.Todo.Enabled, addon.IsEnabled())
+		case "publicApi":
+			assert.Equal(t, config.Syndesis.Addons.PublicAPI.Name(), addon.Name())
+			assert.Equal(t, config.Syndesis.Addons.PublicAPI.Enabled, addon.IsEnabled())
+		default:
+			t.Errorf("addon name %s not recognised", addon.Name())
+		}
+	}
+}
 
 func Test_loadFromFile(t *testing.T) {
 	type args struct {
@@ -93,8 +130,8 @@ func Test_setConfigFromEnv(t *testing.T) {
 					RouteHostname: "route",
 					Addons: AddonsSpec{
 						DV: DvConfiguration{
-							Enabled: true,
-							Image:   "DV_IMAGE",
+							AddonConfiguration: AddonConfiguration{Enabled: true},
+							Image:              "DV_IMAGE",
 						},
 						CamelK: CamelKConfiguration{Image: "CAMELK_IMAGE"},
 						Todo:   TodoConfiguration{Image: "TODO_IMAGE"},
@@ -139,8 +176,8 @@ func Test_setConfigFromEnv(t *testing.T) {
 					RouteHostname: "route",
 					Addons: AddonsSpec{
 						DV: DvConfiguration{
-							Enabled: true,
-							Image:   "docker.io/teiid/syndesis-dv:latest",
+							AddonConfiguration: AddonConfiguration{Enabled: true},
+							Image:              "docker.io/teiid/syndesis-dv:latest",
 						},
 					},
 					Components: ComponentsSpec{
@@ -249,33 +286,41 @@ func Test_setSyndesisFromCustomResource(t *testing.T) {
 				Syndesis: SyndesisConfig{
 					Addons: AddonsSpec{
 						Jaeger: JaegerConfiguration{
-							Enabled:       true,
+							Enabled: true,
+							Olm: OlmSpec{
+								Package: "jaeger",
+								Channel: "stable",
+							},
 							SamplerType:   "const",
 							SamplerParam:  "0",
 							ImageAgent:    "jaegertracing/jaeger-agent:1.13",
 							ImageAllInOne: "jaegertracing/all-in-one:1.13",
 							ImageOperator: "jaegertracing/jaeger-operator:1.13",
 						},
-						Ops: AddonConfiguration{Enabled: false},
-						Todo: TodoConfiguration{
-							Enabled: true,
-							Image:   "docker.io/centos/php-71-centos7",
+						Ops: OpsConfiguration{
+							AddonConfiguration: AddonConfiguration{Enabled: false},
 						},
-						Knative: AddonConfiguration{Enabled: false},
+						Todo: TodoConfiguration{
+							AddonConfiguration: AddonConfiguration{Enabled: true},
+							Image:              "docker.io/centos/php-71-centos7",
+						},
+						Knative: KnativeConfiguration{
+							AddonConfiguration: AddonConfiguration{Enabled: false},
+						},
 						DV: DvConfiguration{
-							Enabled:   true,
-							Resources: Resources{Memory: "1024Mi"},
-							Image:     "docker.io/teiid/syndesis-dv:latest",
+							AddonConfiguration: AddonConfiguration{Enabled: true},
+							Resources:          Resources{Memory: "1024Mi"},
+							Image:              "docker.io/teiid/syndesis-dv:latest",
 						},
 						CamelK: CamelKConfiguration{
-							Enabled:       true,
-							Image:         "fabric8/s2i-java:3.0-java8",
-							CamelVersion:  "3.1.0",
-							CamelKRuntime: "1.1.0",
+							AddonConfiguration: AddonConfiguration{Enabled: true},
+							Image:              "fabric8/s2i-java:3.0-java8",
+							CamelVersion:       "3.1.0",
+							CamelKRuntime:      "1.1.0",
 						},
 						PublicAPI: PublicAPIConfiguration{
-							Enabled:       true,
-							RouteHostname: "mypublichost.com",
+							AddonConfiguration: AddonConfiguration{Enabled: true},
+							RouteHostname:      "mypublichost.com",
 						},
 					},
 				},
@@ -365,32 +410,41 @@ func getConfigLiteral() *Config {
 			SHA:           false,
 			Addons: AddonsSpec{
 				Jaeger: JaegerConfiguration{
-					Enabled:       false,
+					Enabled: false,
+					Olm: OlmSpec{
+						Package: "jaeger",
+						Channel: "stable",
+					},
 					SamplerType:   "const",
 					SamplerParam:  "0",
 					ImageAgent:    "jaegertracing/jaeger-agent:1.13",
 					ImageAllInOne: "jaegertracing/all-in-one:1.13",
 					ImageOperator: "jaegertracing/jaeger-operator:1.13",
 				},
-				Ops: AddonConfiguration{Enabled: false},
+				Ops: OpsConfiguration{
+					AddonConfiguration: AddonConfiguration{Enabled: false},
+				},
 				Todo: TodoConfiguration{
-					Enabled: false,
-					Image:   "docker.io/centos/php-71-centos7",
+					AddonConfiguration: AddonConfiguration{Enabled: false},
+					Image:              "docker.io/centos/php-71-centos7",
+				},
+				Knative: KnativeConfiguration{
+					AddonConfiguration: AddonConfiguration{Enabled: false},
 				},
 				DV: DvConfiguration{
-					Enabled:   false,
-					Image:     "docker.io/teiid/syndesis-dv:latest",
-					Resources: Resources{Memory: "1024Mi"},
+					AddonConfiguration: AddonConfiguration{Enabled: false},
+					Image:              "docker.io/teiid/syndesis-dv:latest",
+					Resources:          Resources{Memory: "1024Mi"},
 				},
 				CamelK: CamelKConfiguration{
-					Enabled:       false,
-					CamelVersion:  "3.1.0",
-					CamelKRuntime: "1.1.0",
-					Image:         "fabric8/s2i-java:3.0-java8",
+					AddonConfiguration: AddonConfiguration{Enabled: false},
+					CamelVersion:       "3.1.0",
+					CamelKRuntime:      "1.1.0",
+					Image:              "fabric8/s2i-java:3.0-java8",
 				},
 				PublicAPI: PublicAPIConfiguration{
-					Enabled:       true,
-					RouteHostname: "mypublichost.com",
+					AddonConfiguration: AddonConfiguration{Enabled: true},
+					RouteHostname:      "mypublichost.com",
 				},
 			},
 			Components: ComponentsSpec{
@@ -573,12 +627,21 @@ func Test_ApiCapabilities(t *testing.T) {
 
 	res1 := metav1.APIResourceList{
 		GroupVersion: "image.openshift.io/v1",
+		APIResources: []metav1.APIResource{
+			{Name: "imagestreams"},
+		},
 	}
 	res2 := metav1.APIResourceList{
 		GroupVersion: "route.openshift.io/v1",
+		APIResources: []metav1.APIResource{
+			{Name: "routes"},
+		},
 	}
 	res3 := metav1.APIResourceList{
 		GroupVersion: "oauth.openshift.io/v1",
+		APIResources: []metav1.APIResource{
+			{Name: "oauthclientauthorizations"},
+		},
 	}
 
 	res4 := metav1.APIResourceList{
@@ -638,7 +701,9 @@ func Test_ApiCapabilities(t *testing.T) {
 				Minor: "16",
 			}
 
-			apiSpec, err := capabilities.ApiCapabilities(api)
+			clientTools := &clienttools.ClientTools{}
+			clientTools.SetApiClient(api)
+			apiSpec, err := capabilities.ApiCapabilities(clientTools)
 			if err != nil {
 				t.Error(err)
 			}

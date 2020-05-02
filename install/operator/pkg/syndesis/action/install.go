@@ -26,6 +26,7 @@ import (
 	"github.com/syndesisio/syndesis/install/operator/pkg/apis/syndesis/v1beta1"
 	"github.com/syndesisio/syndesis/install/operator/pkg/syndesis/clienttools"
 	"github.com/syndesisio/syndesis/install/operator/pkg/syndesis/configuration"
+	"github.com/syndesisio/syndesis/install/operator/pkg/syndesis/olm"
 	"github.com/syndesisio/syndesis/install/operator/pkg/syndesis/operation"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -150,16 +151,33 @@ func (a *installAction) Execute(ctx context.Context, syndesis *v1beta1.Syndesis)
 		all = append(all, dbResources...)
 	}
 
-	addons := configuration.GetAddons(*config)
-	for _, addon := range addons {
-		if !addon.Enabled {
+	addonsInfo := configuration.GetAddonsInfo(*config)
+	for _, addonInfo := range addonsInfo {
+		if !addonInfo.IsEnabled() {
 			continue
 		}
 
-		addonDir := "./addons/" + addon.Name + "/"
+		a.log.Info("Installing addon", "Name", addonInfo.Name())
+
+		if config.ApiServer.OlmSupport && addonInfo.GetOlmSpec() != nil {
+			//
+			// Using the operator hub is not mutally exclusive to loading the addon
+			// resources. Each addon should be tailored with conditionals to be
+			// compatible with using the operator hub or not, ie. operator installation
+			// should be delegated to the OLM & only if that's not possible should it
+			// be installed from syndesis' own resources.
+			//
+			err := olm.SubscribeOperator(ctx, a.clientTools, config, addonInfo.GetOlmSpec())
+			if err != nil {
+				a.log.Error(err, "A subscription to an OLM operator failed", "Addon Name", addonInfo.Name(), "Package", addonInfo.GetOlmSpec().Package)
+				continue
+			}
+		}
+
+		addonDir := "./addons/" + addonInfo.Name() + "/"
 		f, err := generator.GetAssetsFS().Open(addonDir)
 		if err != nil {
-			a.log.Info("unsupported addon configured", "addon", addon.Name, "error", err)
+			a.log.Info("unsupported addon configured", "addon", addonInfo.Name(), "error", err)
 			continue
 		}
 		f.Close()
