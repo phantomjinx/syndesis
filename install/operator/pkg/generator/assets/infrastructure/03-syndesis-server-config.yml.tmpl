@@ -93,6 +93,12 @@
         additionalMavenArguments: "--strict-checksums"
 {{- end}}        
         integrationLivenessProbeInitialDelaySeconds: 120
+        integration-labels:
+          com.redhat.component-name: application
+          com.redhat.component-type: application
+          com.redhat.component-version: "{{.Tag}}"
+          com.redhat.product-name: "Red_Hat_Integration"
+          com.redhat.product-version: "{{.Version}}"
       dao:
         kind: jsondb
       controllers:
