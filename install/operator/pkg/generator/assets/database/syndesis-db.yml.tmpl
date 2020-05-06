@@ -220,6 +220,11 @@
           app: syndesis
           syndesis.io/app: syndesis
           syndesis.io/component: syndesis-db
+          com.redhat.component-name: syndesis-db
+          com.redhat.component-type: infrastructure
+          com.redhat.component-version: "{{.Tag}}"
+          com.redhat.product-name: "Red_Hat_Integration"
+          com.redhat.product-version: "{{.Version}}"
       spec:
         serviceAccountName: syndesis-default
         containers:
