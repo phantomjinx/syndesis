@@ -46,10 +46,12 @@ type Install struct {
 	eject          string
 	image          string
 	tag            string
+	version        string
 	addons         string
 	customResource string
 	devSupport     bool
 	apiServer      capabilities.ApiServerSpec
+	productized    bool
 	databaseImage  string
 	templateName   string
 
@@ -161,8 +163,12 @@ func (o *Install) before(_ *cobra.Command, args []string) (err error) {
 
 	o.databaseImage = defaultDatabaseImage
 	config, err := configuration.GetProperties(o.Context, configuration.TemplateConfig, o.ClientTools(), &v1beta1.Syndesis{})
+	o.productized = productizedBuild
+	o.version = productVersion
 	if err == nil {
 		o.databaseImage = config.Syndesis.Components.Database.Image
+		o.productized = config.Productized
+		o.version = config.Version
 	}
 
 	return nil
@@ -205,6 +211,8 @@ type RenderScope struct {
 	ApiServer     capabilities.ApiServerSpec
 	DevSupport    bool
 	Role          string
+	Productized   bool
+	Version       string
 	Kind          string
 	EnabledAddons []string
 	DatabaseImage string
@@ -265,6 +273,8 @@ func (o *Install) render(fromFile string) ([]unstructured.Unstructured, error) {
 		Role:          RoleName,
 		Kind:          "Role",
 		EnabledAddons: addons,
+		Productized:   o.productized,
+		Version:       o.version,
 		DatabaseImage: o.databaseImage,
 	})
 	return resources, err
