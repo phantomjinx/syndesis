@@ -108,6 +108,11 @@
         creationTimestamp: null
         labels:
           app: syndesis
+          com.redhat.component-name: todo
+          com.redhat.component-type: infrastructure
+          com.redhat.component-version: "{{.Tag}}"
+          com.redhat.product-name: "Red_Hat_Integration"
+          com.redhat.product-version: "{{.Version}}"
           syndesis.io/app: todo
           syndesis.io/component: todo
       spec:
