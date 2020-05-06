@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/syndesisio/syndesis/install/operator/pkg"
 	"github.com/syndesisio/syndesis/install/operator/pkg/generator"
 	"github.com/syndesisio/syndesis/install/operator/pkg/openshift/serviceaccount"
 	"github.com/syndesisio/syndesis/install/operator/pkg/util"
@@ -71,6 +72,7 @@ func (a *installAction) Execute(ctx context.Context, syndesis *v1beta1.Syndesis)
 
 	// Load configuration to to use as context for generate pkg
 	config, err := configuration.GetProperties(configuration.TemplateConfig, ctx, a.client, syndesis)
+	config.Tag = pkg.DefaultOperatorTag
 	if err != nil {
 		return err
 	}
