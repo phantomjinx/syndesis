@@ -88,6 +88,12 @@
         deploymentMemoryLimitMi: 512
         mavenOptions: "-XX:+UseG1GC -XX:+UseStringDeduplication -Xmx310m"
         integrationLivenessProbeInitialDelaySeconds: 120
+        integration-labels:
+          com.redhat.component-name: application
+          com.redhat.component-type: application
+          com.redhat.component-version: "{{.Tag}}"
+          com.redhat.product-name: "Red_Hat_Integration"
+          com.redhat.product-version: "{{.Version}}"
       dao:
         kind: jsondb
       controllers:
