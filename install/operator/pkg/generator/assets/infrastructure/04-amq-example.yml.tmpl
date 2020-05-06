@@ -39,6 +39,11 @@
           app: syndesis
           syndesis.io/app: syndesis
           syndesis.io/example: broker-amq
+          com.redhat.component-name: broker-amq
+          com.redhat.component-type: infrastructure
+          com.redhat.component-version: "{{.Tag}}"
+          com.redhat.product-name: "Red_Hat_Integration"
+          com.redhat.product-version: "{{.Version}}"
         name: broker-amq
       spec:
         containers:
@@ -71,4 +76,3 @@
         terminationGracePeriodSeconds: 60
     triggers:
     - type: ConfigChange
-{{- end}}
