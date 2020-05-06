@@ -19,6 +19,11 @@
       metadata:
         labels:
           name: jaeger-operator
+          com.redhat.component-name: jaeger-operator
+          com.redhat.component-type: infrastructure
+          com.redhat.component-version: "{{.Tag}}"
+          com.redhat.product-name: "Red_Hat_Integration"
+          com.redhat.product-version: "{{.Version}}"
       spec:
         serviceAccountName: jaeger-operator
         containers:

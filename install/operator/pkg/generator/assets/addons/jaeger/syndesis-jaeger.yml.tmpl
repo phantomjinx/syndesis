@@ -9,6 +9,12 @@
       syndesis.io/component: jaeger
     name: syndesis-jaeger
   spec:
+    labels:
+      com.redhat.component-name: syndesis-jaeger
+      com.redhat.component-type: infrastructure
+      com.redhat.component-version: "{{.Tag}}"
+      com.redhat.product-name: "Red_Hat_Integration"
+      com.redhat.product-version: "{{.Version}}"
     strategy: allInOne
     allInOne:
       image: '{{ .Syndesis.Addons.Jaeger.ImageAllInOne }}'
