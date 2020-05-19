@@ -81,6 +81,7 @@
             <configuration>
               <environmentVariables>
                 <CYPRESS_INSTALL_BINARY>0</CYPRESS_INSTALL_BINARY>
+                <PUPPETEER_SKIP_CHROMIUM_DOWNLOAD>true</PUPPETEER_SKIP_CHROMIUM_DOWNLOAD>
               </environmentVariables>
               <arguments>install --force --no-progress --frozen-lockfile ${yarn-install-args} ${yarn-verbose}</arguments>
             </configuration>
