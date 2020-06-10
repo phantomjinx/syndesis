@@ -110,7 +110,7 @@
 
     <version.tomcat>9.0.35</version.tomcat>
 
-    <version.com.fasterxml.jackson.databind>2.9.10.1</version.com.fasterxml.jackson.databind>
+    <version.com.fasterxml.jackson.databind>2.9.10.4-redhat-00001</version.com.fasterxml.jackson.databind>
     <version.com.fasterxml.jackson>2.9.10</version.com.fasterxml.jackson>
     <version.io.fabric8.kubernetes-api>3.0.12</version.io.fabric8.kubernetes-api>
 
@@ -799,8 +799,8 @@
       <groupId>com.microsoft.sqlserver</groupId>
       <artifactId>mssql-jdbc</artifactId>
       <scope>runtime</scope>
-    </dependency> 
-    <!-- supported relational data sources -->    
+    </dependency>
+    <!-- supported relational data sources -->
     <dependency>
       <groupId>org.teiid</groupId>
       <artifactId>spring-data-salesforce</artifactId>
