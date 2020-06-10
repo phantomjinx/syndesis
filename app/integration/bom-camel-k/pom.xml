@@ -29,9 +29,9 @@
   <properties>
     <camel.version>2.23.2.fuse-760024</camel.version>
     <atlasmap.version>1.42.10</atlasmap.version>
-    <jackson.version>2.9.9</jackson.version>
-    <jackson.databind.version>2.9.9</jackson.databind.version>
-    <jackson-module-jaxb-annotations.version>2.9.9</jackson-module-jaxb-annotations.version>
+    <jackson.version>2.9.10</jackson.version>
+    <jackson.databind.version>2.9.10.4-redhat-00001</jackson.databind.version>
+    <jackson-module-jaxb-annotations.version>2.9.10</jackson-module-jaxb-annotations.version>
     <validation-api.version>2.0.1.Final</validation-api.version>
   </properties>
 
