@@ -231,6 +231,19 @@
 
     <!-- test -->
     <dependency>
+        <groupId>org.keycloak</groupId>
+        <artifactId>keycloak-core</artifactId>
+        <version>10.0.2</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>com.auth0</groupId>
+        <artifactId>java-jwt</artifactId>
+        <version>3.10.3</version>
+        <scope>test</scope>
+    </dependency>
+    
+    <dependency>
       <groupId>io.syndesis.integration</groupId>
       <artifactId>integration-runtime</artifactId>
       <scope>test</scope>

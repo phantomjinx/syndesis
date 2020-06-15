@@ -294,7 +294,7 @@ patch_pv_ref() {
         check_error "ERROR: Persistent volume reference not specified"
     fi
 
-    ${KUBE} get pv/$pv | grep Fail
+    ${KUBE} get pv/$pv | grep Released
     if [ "$?" == "1" ]; then
         echo "${pv} has not failed ... skipping"
         return

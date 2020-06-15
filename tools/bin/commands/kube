@@ -165,9 +165,9 @@ metadata:
     syndesis.io/app: syndesis
     syndesis.io/type: infrastructure
 stringData:
-  OAUTH_PROVIDER: "${provider}"
-  OAUTH_CLIENT_ID: "${client_id}"
-  OAUTH_CLIENT_SECRET: "${client_secret}"
+  OAUTH2_PROXY_PROVIDER: "${provider}"
+  OAUTH2_PROXY_CLIENT_ID: "${client_id}"
+  OAUTH2_PROXY_CLIENT_SECRET: "${client_secret}"
 EOT
 
     local applycls=$(cat "${cls_file}" | ${KUBECTL} apply -f - 2>&1)

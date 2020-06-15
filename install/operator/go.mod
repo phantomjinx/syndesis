@@ -43,6 +43,7 @@ require (
 	github.com/coreos/prometheus-operator v0.39.0 // indirect
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32 // indirect
 	github.com/go-logr/zapr v0.1.1
+	github.com/oauth2-proxy/oauth2-proxy v3.2.0+incompatible
 	github.com/operator-framework/api v0.3.5
 	github.com/operator-framework/operator-lifecycle-manager v0.0.0-20200508205316-9ffa1fdb8dcf // Tag v0.15.0
 	github.com/operator-framework/operator-marketplace v0.0.0-20200515051804-e0148822df25

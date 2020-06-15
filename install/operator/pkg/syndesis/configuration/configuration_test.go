@@ -18,15 +18,32 @@ package configuration
 
 import (
 	"context"
+	"encoding/base64"
+	"fmt"
 	"os"
 	"reflect"
 	"testing"
 
+	"github.com/oauth2-proxy/oauth2-proxy/cookie"
 	"github.com/stretchr/testify/assert"
-
+	"github.com/stretchr/testify/require"
 	"github.com/syndesisio/syndesis/install/operator/pkg/apis/syndesis/v1beta1"
 	"github.com/syndesisio/syndesis/install/operator/pkg/syndesis/capabilities"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+func Test_Oauth(t *testing.T) {
+	target := "eyJBY2Nlc3NUb2tlbiI6InprcDZvRUhGNFlRS3RmdU1WbHdsS1RtU1NJZFRRTzhCTHErZ3pYalNUMm1vc1QwdGZOWm1FdjZJM1huSkk1alpLUklzbmJtMk5rOFkrT09uNDBwOWJ6Z3o3OG1teUkzaFhLUmI2NEFtUEZtMndkRGsxd0E0ZVd3WitiWEJiZEdCZnNnWFZYaHFRVWIzZ0VhQjF0cGxzT2JkaW9OYXhxYzhYTWEyRnp3UERkeFZ4Q0pvSnp3VXdvQndBbXNwdlVoMlZkaHVPR2JuZnI5MmxQRGlUbDdMNFdlVDV1MktzZ2NRaHVTWnRSNjYxSjh4NVJmMXltRmVZUnl6ME9HMnJ3SFJaTXJITUpsdTZWMkNoT3J1VXp3YmFDRHhjME1xNXBzaEpkOTkyUzFlUGZZOWlTWDJKU00xZlpzU2cxQ3VUNFhEdmliVmVkdFN2VGpsNDhlaXdFbXZKUUlVbjFQc3JoTUFPcHZvRis1MUtkeUEyZkl3NWFncCtuOU56cFJGMkxDTmp0K2s4NHZNVHVaNUw5YThwVWdZNkplNXU3Q09ZNGlOU2NOby82N3dWN3FwektUUTRXM0dzWXNSYUdPblZ1UFR0a3laTS80T29XSDBzdmJPSVpTcGxqaWRZZ3ZhMnhTT3VzVldBM21sZHpGaXNlUjBYZUY3NDVmR0tmZjFoZ2lJaGYySWVyVTBsS3NLOUpFU0FMakFzaGlleWNISUtkQlE5bmprNU15Q2xSWUNlVGpUejl5UDRGdHIwUVlVckNmWWRaaGF0L0RCZjUrSDVyVmJ1RmRMNVBta202RjhCNE1JcEJtWjlxMUVmc3BSYk1QUVdOZDNnVmVKb1ZqYWRLNldYM3pReE9yZEc4SktZUTUyUnduYktpY1ZlcXBFdU94S3hNSHN4V3RyRFUyRk14QWZIYng3ajB5YnlmNTFDd0Vac3JoaVFramk3KzhGMnFJejFMUjVVNXgzbkNEUGZ2bXh3R3YvdThIaEJaQU45YjM4Qlp5K2lwRVlqWGxHdlhqYnBINHNpSVQ2L3d5LzY0bjFoWUprSUVSY3FLZG9HR1Uvb2h4ZWlQQjFXZlplK2tGcFhwT1RaSmY3Vjg1ckZIUk56dFBiZllXMjhjeHRET0JWLzJYZHhtVk1rc0VSYlA0K0JleXdUb2c1Y3dLVUJ2anZNdFpZSG9QVkpFTlptZkVRT3EwN2hpMzVQc1dqcDNoMkpPRW1hR3ZRS25MZDh6dHp0V3MvUkJOdzRGRE5iMlk1S1B1STk0elQxV0xZYVRSS1c0Y2ZoZm1pUThSN2hDZTU3eUVnelNvd1BwVS9rOUlrYnpPOVdtY05xVGQvTUVadUpGR1oxRnpFSjY2VjBUUyttcGpKdS9wL3V2bjZGaXhzOTg3Y24yMTlLNFRMa0J0NHVRTk1EcGM0UWY3VGE1UDBlQ1JCSmtXWWwzTk9NTnArRkVGUXhEZzVCaksxaWxBUklXWm53UmpTZERhbVJqUjdEUHJtdHRQdXI5VG1heWl0YWVVanJEeWxrVHV4dnljaFE1RU90blNwbDVBSGNreldCNDdPTERZYzhHdGdXZ0R5dm5uaEZQTDJSTDBzMDlVbk5haWVnelBiYmQ2VG9vN21qaTErUjA2U1haazFFb1pLSUsrVEl0bnMxaHl2WVZGcDhZcnhhZXBuQkNtdUR1ZnhiZHVoNGcrQmZWbnpkNUZFckZ1cFJ4KzJjMGxvRFQ1dWhLYXBpYXNyQ1VrNWptcWRHTjZEcFJpYmFxbThRbHpUeXlHTTNtcjNoOEJObFN2aXplMk5Ja1M2ZEx6eFpEWEhKVzhEL0hJb3A0cFhVUmNlSW4wMWFYemROK05aUWdqNHdBUkxUK2V0ZC9NY1Q5MEJrMjE0cDhyY0NqK1JYdEFaZTF1dnZGRjdvMjZiOEtXV0ZPM0J1TjZ1QVNhc2l3N2VEaUVvYndjbkhPT2ZSdFY5cmFIWmRiMnB4ZW5RS2VnZVNlUGlSbWVEbmFodlZQNWFDb2IrUzBDRWw3VjlkQVVCL3prbE1MK1ZFVDROSUVpekZvWVVsV0w3WjNRTHJVbnV3djk4Y3VUSFlLUkllbWIyQndEUGVmRnk1c3JFUGswVkMzbFAxMDZ1VktZVG1jQ2xPWDZyVDQ3SGVHLytzMG9FanExelZkazNtYWs4YkJ0SzIzaHJ1QkhoZlhkU1ZsamthREc0bVREVUhONnFKdDFUQzBNTzFzOWtXQXJqelpybWZFSzZod0RGRjBISkE4Z3FWbXVxcUIwWkNEM3l5bDVnM1g5NVN6Nnhuc2NncWFmMVNaRTlKZXV6T214RUVCQXFFV1RqZFN0a0pFcGpCWVQzRjF6MzJsdW9VU0tWVExqUzJjSStVcE9UVmJmQ2lOYkJxSkI3RUM5SmRxWkVtcHhBZ0xvRlNWcDQxdHd3c1JLaHhWc0xPNENmSld1bmhzNzVQai9sMjFxeVByc0oyaGtkcXdsM2tsaG81NmVxd2VJQ2txRVU4TWFIWW9ORkFNdm5YQW1oWWtQS3lPNUFPdStQMktWTFpwd1BBWXcwcVE2eTlpbGs1cXplMk8vVFE4UGZMRXdBbGhoMnZmeDBWR0IrTzRhS2FFNGRBVCtVTlBsbFRvT3k3UHNucE0wL1ZqUEc5TklvRE5vSmVoQXBFOWpFeklEcHQrSnB5VHc3bE5vd21KdUxtNGpBbnIyWGt5TmxPOUNjOG9qOHBqWmdaWmU2WmRzRG0rakdLWkN1d0VGajFqWEpURUNJSHFIOW1xY2ZNVzQ5bVNCNk1hV01lNTlXS1ZrTHhWbU5iM3E5RDVONEF6NmptQk5yZ0gyV05hNHFRYzl6ckRieHF5TGMiLCJDcmVhdGVkQXQiOiIyMDIwLTA2LTE2VDIzOjA4OjE5LjY2MzAzOTY0MloiLCJFbWFpbCI6Ill5SGZHVk9WU3lHcWpLV1JaV1k4dTJsSHkrSlBZUkQwSER3dFk3d0RvdExDUGpUaytFZlVrUm9OUlVxVHB6VSsifQ=="
+
+	secret := "3FOLfLBruVpCczQxTKLtOLaPFX2A8eid"
+	c, err := cookie.NewCipher([]byte(secret))
+	require.NoError(t, err)
+
+	decoded, err := c.Decrypt(target)
+	require.NoError(t, err)
+	fmt.Println(decoded)
+}
 
 func Test_GetAddons(t *testing.T) {
 	config := getConfigLiteral()
@@ -620,4 +637,43 @@ func Test_setIntFromEnv(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_secretToEnvVars(t *testing.T) {
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "my-secret",
+			Namespace: "default",
+		},
+		Data: map[string][]byte{
+			"KEY_1": []byte(base64.StdEncoding.EncodeToString([]byte("example1key1"))),
+			"KEY_2": []byte(base64.StdEncoding.EncodeToString([]byte("example1key2"))),
+			"KEY_3": []byte(base64.StdEncoding.EncodeToString([]byte("example1key3"))),
+		},
+	}
+
+	//
+	// Note indenting by 2 tabs or 4 spaces
+	//
+	data, err := SecretToEnvVars(secret.Name, secret.Data, 2)
+	require.NoError(t, err)
+
+	expected := "" +
+		"    - name: KEY_1\n" +
+		"      valueFrom:\n" +
+		"        secretKeyRef:\n" +
+		"          key: KEY_1\n" +
+		"          name: my-secret\n" +
+		"    - name: KEY_2\n" +
+		"      valueFrom:\n" +
+		"        secretKeyRef:\n" +
+		"          key: KEY_2\n" +
+		"          name: my-secret\n" +
+		"    - name: KEY_3\n" +
+		"      valueFrom:\n" +
+		"        secretKeyRef:\n" +
+		"          key: KEY_3\n" +
+		"          name: my-secret\n"
+
+	assert.Equal(t, expected, string(data))
 }
