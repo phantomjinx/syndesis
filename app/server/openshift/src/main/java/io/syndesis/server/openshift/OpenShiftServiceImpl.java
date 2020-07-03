@@ -69,6 +69,7 @@ public class OpenShiftServiceImpl implements OpenShiftService {
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenShiftServiceImpl.class);
 
     private static final String OPENSHIFT_PREFIX = "i-";
+    public static final String JACKSON_OPTIONS = "-Djackson.deserialization.whitelist.packages=io.syndesis.common.model,io.atlasmap";
 
     // Labels used for generated objects
     private static final Map<String, String> INTEGRATION_DEFAULT_LABELS = defaultLabels();
@@ -255,7 +256,7 @@ public class OpenShiftServiceImpl implements OpenShiftService {
 
             // environment variables are stored in a list, so remove duplicates manually before patching
             final EnvVar[] vars = { new EnvVar("LOADER_HOME", config.getIntegrationDataPath(), null),
-                    new EnvVar("JAVA_OPTIONS", "-Djackson.deserialization.whitelist.packages=io.syndesis.common.model,io.atlasmap", null),
+                    new EnvVar("JAVA_OPTIONS", JACKSON_OPTIONS, null),
                     new EnvVar("AB_JMX_EXPORTER_CONFIG", "/tmp/src/prometheus-config.yml", null),
                     new EnvVar("JAEGER_ENDPOINT", jaegerCollectorUri, null),
                     new EnvVar("JAEGER_TAGS", "integration.version="+deploymentData.getVersion(), null),
@@ -390,7 +391,7 @@ public class OpenShiftServiceImpl implements OpenShiftService {
                                     // don't chain withEnv as every invocation overrides the previous one, use var-args instead
                                     .withEnv(
                                             new EnvVar("LOADER_HOME", config.getIntegrationDataPath(), null),
-                                            new EnvVar("JAVA_OPTIONS", "-Djackson.deserialization.whitelist.packages=io.syndesis.common.model,io.atlasmap", null),
+                                            new EnvVar("JAVA_OPTIONS", JACKSON_OPTIONS, null),
                                             new EnvVar("AB_JMX_EXPORTER_CONFIG", "/tmp/src/prometheus-config.yml", null),
                                             new EnvVar("JAEGER_ENDPOINT", jaegerCollectorUri, null),
                                             new EnvVar("JAEGER_TAGS", "integration.version="+deploymentData.getVersion(), null),
