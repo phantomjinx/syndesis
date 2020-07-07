@@ -15,6 +15,11 @@
  */
 package io.syndesis.server.controller.integration.camelk.customizer;
 
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Map;
+import java.util.Optional;
+
 import io.syndesis.common.model.integration.IntegrationDeployment;
 import io.syndesis.server.controller.integration.camelk.crd.ConfigurationSpec;
 import io.syndesis.server.controller.integration.camelk.crd.Integration;
@@ -22,11 +27,6 @@ import io.syndesis.server.controller.integration.camelk.crd.TraitSpec;
 import io.syndesis.server.openshift.Exposure;
 import io.syndesis.server.openshift.OpenShiftServiceImpl;
 import org.springframework.stereotype.Component;
-
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Map;
-import java.util.Optional;
 
 @Component
 public class JacksonCustomizer extends AbstractTraitCustomizer {
@@ -49,14 +49,15 @@ public class JacksonCustomizer extends AbstractTraitCustomizer {
                     configurationSpec.getValue() != null &&
                     configurationSpec.getValue().contains("JAVA_OPTIONS"))
             .findFirst();
-        javaOptions.ifPresentOrElse((cs) -> {
+        if (javaOptions.isPresent()) {
+            ConfigurationSpec cs = javaOptions.get();
             String options = cs.getValue() + " " + OpenShiftServiceImpl.JACKSON_OPTIONS;
             integration.getSpec().getConfiguration().remove(javaOptions.get());
             integration.getSpec().getConfiguration().add(ConfigurationSpec.of("env", options));
-        }, () -> {
+        } else {
             String options = "JAVA_OPTIONS=" + OpenShiftServiceImpl.JACKSON_OPTIONS;
             integration.getSpec().getConfiguration().add(ConfigurationSpec.of("env", options));
-        });
+        }
         return integration;
     }
 }
