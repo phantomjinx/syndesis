@@ -23,6 +23,7 @@ import java.util.Optional;
 import io.syndesis.common.model.integration.IntegrationDeployment;
 import io.syndesis.server.controller.integration.camelk.crd.ConfigurationSpec;
 import io.syndesis.server.controller.integration.camelk.crd.Integration;
+import io.syndesis.server.controller.integration.camelk.crd.IntegrationSpec;
 import io.syndesis.server.controller.integration.camelk.crd.TraitSpec;
 import io.syndesis.server.openshift.Exposure;
 import io.syndesis.server.openshift.OpenShiftServiceImpl;
@@ -49,15 +50,21 @@ public class JacksonCustomizer extends AbstractTraitCustomizer {
                     configurationSpec.getValue() != null &&
                     configurationSpec.getValue().contains("JAVA_OPTIONS"))
             .findFirst();
-        if (javaOptions.isPresent()) {
-            ConfigurationSpec cs = javaOptions.get();
-            String options = cs.getValue() + " " + OpenShiftServiceImpl.JACKSON_OPTIONS;
-            integration.getSpec().getConfiguration().remove(javaOptions.get());
-            integration.getSpec().getConfiguration().add(ConfigurationSpec.of("env", options));
-        } else {
-            String options = "JAVA_OPTIONS=" + OpenShiftServiceImpl.JACKSON_OPTIONS;
-            integration.getSpec().getConfiguration().add(ConfigurationSpec.of("env", options));
+
+        IntegrationSpec.Builder spec = new IntegrationSpec.Builder();
+        if (integration.getSpec() != null) {
+            spec = spec.from(integration.getSpec());
         }
+        String options;
+        if (javaOptions.isPresent()){
+            options = javaOptions.get().getValue() + " " + OpenShiftServiceImpl.JACKSON_OPTIONS;
+        } else {
+            options = "JAVA_OPTIONS=" + OpenShiftServiceImpl.JACKSON_OPTIONS;
+        }
+        spec.addConfiguration(ConfigurationSpec.of("env", options));
+
+        integration.setSpec(spec.build());
+
         return integration;
     }
 }
