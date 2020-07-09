@@ -59,7 +59,7 @@
           - name: JAVA_APP_DIR
             value: /deployments
           - name: JAVA_OPTIONS
-            value: "-Djava.net.preferIPv4Stack=true -Duser.home=/tmp -Djackson.deserialization.whitelist.packages=io.syndesis,io.atlasmap"
+            value: "-Djava.net.preferIPv4Stack=true -Duser.home=/tmp -Djackson.deserialization.whitelist.packages=io.syndesis,io.atlasmap,com.fasterxml.jackson.module"
           - name: NAMESPACE
             valueFrom:
               fieldRef:
