@@ -69,7 +69,7 @@ public class OpenShiftServiceImpl implements OpenShiftService {
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenShiftServiceImpl.class);
 
     private static final String OPENSHIFT_PREFIX = "i-";
-    public static final String JACKSON_OPTIONS = "-Djackson.deserialization.whitelist.packages=io.syndesis.common.model,io.atlasmap";
+    public static final String JACKSON_OPTIONS = "-Djackson.deserialization.whitelist.packages=io.syndesis,io.atlasmap";
 
     // Labels used for generated objects
     private static final Map<String, String> INTEGRATION_DEFAULT_LABELS = defaultLabels();
