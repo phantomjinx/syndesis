@@ -76,7 +76,7 @@
           - name: LOADER_HOME
             value: /deployments/ext
           - name: JAVA_OPTIONS
-            value: "-Djava.net.preferIPv4Stack=true -Duser.home=/tmp"
+            value: "-Djava.net.preferIPv4Stack=true -Duser.home=/tmp  -Djackson.deserialization.whitelist.packages=io.syndesis,io.atlasmap,com.fasterxml.jackson.module"
           - name: NAMESPACE
             valueFrom:
               fieldRef:
