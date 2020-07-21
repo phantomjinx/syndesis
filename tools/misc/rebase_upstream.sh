@@ -1,8 +1,8 @@
 #!/bin/bash
-# Rebase from syndesisio/syndesis.git 1.10.x to jboss-fuse/syndesis 1.10.x
+# Rebase from syndesisio/syndesis.git 1.11.x to jboss-fuse/syndesis 1.11.x
 # if there is a conflict in assets_vfsdata.go use go to regenerate the file
 
-git fetch https://github.com/syndesisio/syndesis.git 1.10.x:upstream
+git fetch https://github.com/syndesisio/syndesis.git 1.11.x:upstream
 # if there is a previous rebase attempt, abort it
 [[ -d .git/rebase-apply/ ]] && git rebase --abort
 git rebase upstream &>/dev/null
@@ -34,6 +34,6 @@ if [[ -d .git/rebase-apply/ ]]; then
     echo "ERROR: There are pending git conflicts to resolve."
     exit 1
 else
-    git push --force --set-upstream origin 1.10.x
+    git push --force --set-upstream origin 1.11.x
 fi
 #git branch -D upstream
