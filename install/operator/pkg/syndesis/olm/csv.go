@@ -106,7 +106,7 @@ type Labels struct {
 }
 
 type Selector struct {
-	MatchLabels Label
+	MatchLabels Label `json:"matchLabels"`
 }
 
 type Link struct {
@@ -138,13 +138,13 @@ type Install struct {
 }
 
 type InstallSpec struct {
-	ClusterPermissions []InstallSpecPermission
+	ClusterPermissions []InstallSpecPermission `json:"clusterPermissions"`
 	Permissions        []InstallSpecPermission
 	Deployments        []InstallSpecDeployment
 }
 
 type InstallSpecPermission struct {
-	ServiceAccountName string
+	ServiceAccountName string `json:"serviceAccountName"`
 	Rules              interface{}
 }
 
@@ -161,14 +161,14 @@ type CustomResourceDefinition struct {
 	Name        string
 	Version     string
 	Kind        string
-	DisplayName string
+	DisplayName string `json:"displayName"`
 	Description string
 }
 
 // In order to build the body for both upstream and downstream,
 // set variables accordingly
 func (c *csv) setVariables() {
-	c.version = c.config.Version
+	c.version = c.config.Version + ".x"
 	c.maturity = "alpha"
 
 	// Both of these are required to ensure permissions are correctly added to manifest
@@ -269,6 +269,8 @@ func (c *csv) build() (err error) {
 		ApiVersion: "operators.coreos.com/v1alpha1",
 		Kind:       "ClusterServiceVersion",
 		Metadata: Metadata{
+			//TODO: This has to be manually replace because `opm` expects a semver format version as per
+			// https://semver.org/
 			Name:      c.name + ".v" + c.version,
 			Namespace: "placeholder",
 			Annotations: MetadataAnnotations{
