@@ -48,11 +48,13 @@
       metadata:
         labels:
           app: syndesis
-          com.redhat.component-name: syndesis-ui
-          com.redhat.component-type: infrastructure
-          com.redhat.component-version: "{{.Tag}}"
-          com.redhat.product-name: "Red_Hat_Integration"
-          com.redhat.product-version: "{{.Version}}"
+          com.company: Red_Hat
+          rht.prod_name: Red_Hat_Integration
+          rht.prod_ver: "{{.Version}}"
+          rht.comp: syndesis-ui
+          rht.comp_ver: "{{.Tag}}"
+          rht.subcomp: syndesis-ui
+          rht.subcomp_t: infrastructure
           syndesis.io/app: syndesis
           syndesis.io/type: infrastructure
           syndesis.io/component: syndesis-ui
