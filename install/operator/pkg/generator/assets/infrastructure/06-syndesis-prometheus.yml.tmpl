@@ -163,11 +163,13 @@
       metadata:
         labels:
           app: syndesis
-          com.redhat.component-name: syndesis-prometheus
-          com.redhat.component-type: infrastructure
-          com.redhat.component-version: "{{.Tag}}"
-          com.redhat.product-name: "Red_Hat_Integration"
-          com.redhat.product-version: "{{.Version}}"
+          com.company: Red_Hat
+          rht.prod_name: Red_Hat_Integration
+          rht.prod_ver: "{{.Version}}"
+          rht.comp: syndesis-prometheus
+          rht.comp_ver: "{{.Tag}}"
+          rht.subcomp: syndesis-prometheus
+          rht.subcomp_t: infrastructure
           syndesis.io/app: syndesis
           syndesis.io/type: infrastructure
           syndesis.io/component: syndesis-prometheus

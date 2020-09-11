@@ -94,11 +94,13 @@
 {{- end}}
         integrationLivenessProbeInitialDelaySeconds: 120
         integration-labels:
-          com.redhat.component-name: application
-          com.redhat.component-type: application
-          com.redhat.component-version: "{{.Tag}}"
-          com.redhat.product-name: "Red_Hat_Integration"
-          com.redhat.product-version: "{{.Version}}"
+          com.company: Red_Hat
+          rht.prod_name: Red_Hat_Integration
+          rht.prod_ver: "{{.Version}}"
+          rht.comp: application
+          rht.comp_ver: "{{.Tag}}"
+          rht.subcomp: application
+          rht.subcomp_t: application
       dao:
         kind: jsondb
       controllers:
