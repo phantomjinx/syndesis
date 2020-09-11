@@ -88,11 +88,13 @@
           syndesis.io/app: syndesis
           syndesis.io/type: operator
           syndesis.io/component: syndesis-operator
-          com.redhat.component-name: syndesis-operator
-          com.redhat.component-type: infrastructure
-          com.redhat.component-version: "{{.Tag}}"
-          com.redhat.product-name: "Red_Hat_Integration"
-          com.redhat.product-version: "{{.Version}}"
+          com.company: Red_Hat
+          rht.prod_name: Red_Hat_Integration
+          rht.prod_ver: "{{.Version}}"
+          rht.comp: syndesis-operator
+          rht.comp_ver: "{{.Tag}}"
+          rht.subcomp: syndesis-operator
+          rht.subcomp_t: infrastructure
       spec:
         serviceAccountName: syndesis-operator
         containers:
