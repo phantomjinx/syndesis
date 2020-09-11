@@ -39,11 +39,13 @@
           app: syndesis
           syndesis.io/app: syndesis
           syndesis.io/example: broker-amq
-          com.redhat.component-name: broker-amq
-          com.redhat.component-type: infrastructure
-          com.redhat.component-version: "{{.Tag}}"
-          com.redhat.product-name: "Red_Hat_Integration"
-          com.redhat.product-version: "{{.Version}}"
+          com.company: Red_Hat
+          rht.prod_name: Red_Hat_Integration
+          rht.prod_ver: "{{.Version}}"
+          rht.comp: broker-amq
+          rht.comp_ver: "{{.Tag}}"
+          rht.subcomp: broker-amq
+          rht.subcomp_t: infrastructure
         name: broker-amq
       spec:
         containers:
