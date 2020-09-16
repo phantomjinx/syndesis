@@ -7,5 +7,8 @@ var JobNameLabel = "job-name"
 // The Date & Time of the build if specified, not a constant
 var BuildDateTime = ""
 
-// ControllerUidLabel label to be added to Jobs, for tracking, an actual constant
-var ControllerUidLabel = "controller-uid"
+// The level prescribed as the debugging level of the logger
+var DEBUG_LOGGING_LVL = 1
+
+// ControllerUIDLabel label to be added to Jobs, for tracking, an actual constant
+const ControllerUIDLabel = "controller-uid"
