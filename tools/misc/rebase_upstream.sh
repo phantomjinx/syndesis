@@ -24,7 +24,10 @@ if [ $? -ne 0 ]; then
         $GOROOT/bin/go generate -x ./pkg/generator/
         git add pkg/generator/assets_vfsdata.go
         cd ../..
-        git rebase --continue &>/dev/null
+        # This will override the editor that git uses for message confirmation. true command simply ends with zero exit code.
+        # It makes git continue rebase as if user closed interactive editor.
+        # otherwise the "continue" op opens an interactive editor
+        GIT_EDITOR=true git rebase --continue
         if [ $? -ne 0 ]; then
             echo "Could not rebase. The conflict must be manually resolved."
             git status
