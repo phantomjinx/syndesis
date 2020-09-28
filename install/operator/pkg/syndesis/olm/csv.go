@@ -106,7 +106,7 @@ type Labels struct {
 }
 
 type Selector struct {
-	MatchLabels Label
+	MatchLabels Label `json:"matchLabels"`
 }
 
 type Link struct {
@@ -138,13 +138,13 @@ type Install struct {
 }
 
 type InstallSpec struct {
-	ClusterPermissions []InstallSpecPermission
+	ClusterPermissions []InstallSpecPermission `json:"clusterPermissions"`
 	Permissions        []InstallSpecPermission
 	Deployments        []InstallSpecDeployment
 }
 
 type InstallSpecPermission struct {
-	ServiceAccountName string
+	ServiceAccountName string `json:"serviceAccountName"`
 	Rules              interface{}
 }
 
@@ -161,7 +161,7 @@ type CustomResourceDefinition struct {
 	Name        string
 	Version     string
 	Kind        string
-	DisplayName string
+	DisplayName string `json:"displayName"`
 	Description string
 }
 
