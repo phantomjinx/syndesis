@@ -68,10 +68,10 @@ type Spec struct {
 	Selector                  Selector
 	Icon                      []Icon
 	Links                     []Link
-	RelatedImages             []Image
-	InstallModes              []InstallMode
+	RelatedImages             []Image       `json:"relatedImages"`
+	InstallModes              []InstallMode `json:"installModes"`
 	Install                   Install
-	Customresourcedefinitions CustomResourceDefinitions
+	Customresourcedefinitions CustomResourceDefinitions `json:"customResourceDefinitions"`
 }
 
 type Metadata struct {
@@ -85,7 +85,7 @@ type MetadataAnnotations struct {
 	Categories     string
 	Certified      string
 	CreatedAt      string
-	ContainerImage string
+	ContainerImage string `json:"containerImage"`
 	Support        string
 	Description    string
 	Repository     string
@@ -106,7 +106,7 @@ type Labels struct {
 }
 
 type Selector struct {
-	MatchLabels Label
+	MatchLabels Label `json:"matchLabels"`
 }
 
 type Link struct {
@@ -138,13 +138,13 @@ type Install struct {
 }
 
 type InstallSpec struct {
-	ClusterPermissions []InstallSpecPermission
+	ClusterPermissions []InstallSpecPermission `json:"clusterPermissions"`
 	Permissions        []InstallSpecPermission
 	Deployments        []InstallSpecDeployment
 }
 
 type InstallSpecPermission struct {
-	ServiceAccountName string
+	ServiceAccountName string `json:"serviceAccountName"`
 	Rules              interface{}
 }
 
@@ -161,7 +161,7 @@ type CustomResourceDefinition struct {
 	Name        string
 	Version     string
 	Kind        string
-	DisplayName string
+	DisplayName string `json:"displayName"`
 	Description string
 }
 
