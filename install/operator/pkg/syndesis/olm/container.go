@@ -26,7 +26,7 @@ func (d *container) build() (err error) {
 	m := map[string]map[string]string{
 		"operator_manifests": {
 			"manifests_dir":                "manifests",
-			"enable_digest_pinning":        "false",
+			"enable_digest_pinning":        "true",
 			"enable_repo_replacements":     "false",
 			"enable_registry_replacements": "false",
 		},
