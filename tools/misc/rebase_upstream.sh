@@ -14,12 +14,12 @@ git fetch https://github.com/syndesisio/syndesis.git ${branch}:upstream
 git rebase upstream &>/dev/null
 if [ $? -ne 0 ]; then
     assets_vfsdata_conflict=$(git status --porcelain | grep -c 'UU install/operator/pkg/generator/assets_vfsdata.go')
-    if [[ ${assets_vfsdata_conflict} == 1 ]] ; then
+    while [[ ${assets_vfsdata_conflict} == 1 ]]; do
         if [[ ! -f "$GOROOT/bin/go" ]]; then
             echo "ERROR: go is required to regenerate the assets_vfsdata.go, but is not installed in \$GOROOT/bin/go. Env \$GOROOT: $GOROOT"
             exit 1
         fi
-        echo "Regenerate install/operator/pkg/generator/assets_vfsdata.go"
+        echo "--> Resolve conflict. Regenerate install/operator/pkg/generator/assets_vfsdata.go"
         cd install/operator
         $GOROOT/bin/go generate -x ./pkg/generator/
         git add pkg/generator/assets_vfsdata.go
@@ -28,12 +28,9 @@ if [ $? -ne 0 ]; then
         # It makes git continue rebase as if user closed interactive editor.
         # otherwise the "continue" op opens an interactive editor
         GIT_EDITOR=true git rebase --continue
-        if [ $? -ne 0 ]; then
-            echo "Could not rebase. The conflict must be manually resolved."
-            git status
-            exit 1
-        fi
-    else
+        assets_vfsdata_conflict=$(git status --porcelain | grep -c 'UU install/operator/pkg/generator/assets_vfsdata.go')
+    done
+    if [[ ${assets_vfsdata_conflict} > 0 ]]; then
         echo "Could not rebase. The conflict must be manually resolved."
         git status
         exit 1
@@ -45,4 +42,3 @@ if [[ -d .git/rebase-apply/ ]]; then
 else
     git push --force --set-upstream origin ${branch}
 fi
-#git branch -D upstream
