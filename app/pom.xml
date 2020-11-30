@@ -94,7 +94,7 @@
     <camel.version>2.23.2.fuse-780030</camel.version>
 
     <!-- Override undertow version to fix CVEs -->
-    <undertow.version>2.0.30.SP3-redhat-00001</undertow.version>
+    <undertow.version>2.0.30.SP4-redhat-00001</undertow.version>
 
     <!-- CXF version, to be kept in sync with the one referenced by camel version above -->
     <cxf.version>3.3.6.fuse-780018</cxf.version>
