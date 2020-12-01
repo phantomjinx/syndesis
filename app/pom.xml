@@ -26,7 +26,7 @@
 
   <groupId>io.syndesis</groupId>
   <artifactId>syndesis-parent</artifactId>
-  <version>1.11-SNAPSHOT</version>
+  <version>1.11.0.fuse-780011</version>
   <packaging>pom</packaging>
 
   <name>Syndesis</name>
@@ -39,7 +39,7 @@
     <deploy.archives>false</deploy.archives>
 
     <!-- Atlasmap version -->
-    <atlasmap.version>2.0.10</atlasmap.version>
+    <atlasmap.version>2.0.7.fuse-780012</atlasmap.version>
 
     <!-- Image names -->
     <image.s2i>syndesis/syndesis-s2i:%l</image.s2i>
@@ -47,19 +47,19 @@
     <image.meta>syndesis/syndesis-meta:%l</image.meta>
     <image.ui>syndesis/syndesis-ui:%l</image.ui>
 
-    <fabric8.maven.plugin.version>4.2.0</fabric8.maven.plugin.version>
+    <fabric8.maven.plugin.version>4.3.0.fuse-780012</fabric8.maven.plugin.version>
     <maven.exec.plugin.version>1.2.1</maven.exec.plugin.version>
     <dep.plugin.deploy.version>2.8.2</dep.plugin.deploy.version>
     <clean-maven-plugin-version>2.4.1</clean-maven-plugin-version>
     <frontend-maven-plugin-version>1.8.0</frontend-maven-plugin-version>
-    <node.version>v10.15.1</node.version>
+    <node.version>v10.16.0</node.version>
     <yarn.version>v1.13.0</yarn.version>
 
     <hibernate.validator.version>6.0.20.Final</hibernate.validator.version>
 
     <jackson.version>2.11.2</jackson.version>
     <json-patch.version>1.9</json-patch.version>
-    <kubernetes.client.version>4.9.0</kubernetes.client.version>
+    <kubernetes.client.version>4.6.2.fuse-780004</kubernetes.client.version>
 
     <spring.version>5.2.9.RELEASE</spring.version>
     <spring-boot.version>2.3.4.RELEASE</spring-boot.version>
@@ -76,7 +76,7 @@
     <activemq.version>5.15.9</activemq.version>
 
     <arquillian.version>1.4.0.Final</arquillian.version>
-    <arquillian.cube.version>1.18.2</arquillian.cube.version>
+    <arquillian.cube.version>1.8.2.fuse-780002</arquillian.cube.version>
 
     <maven.version>3.5.4</maven.version>
 
@@ -91,13 +91,13 @@
     <opentracing.spring.web.starter.version>3.0.0</opentracing.spring.web.starter.version>
 
     <!-- Global camel version used everywhere -->
-    <camel.version>2.23.2.fuse-780030</camel.version>
+    <camel.version>2.23.2.fuse-780036</camel.version>
 
     <!-- Override undertow version to fix CVEs -->
     <undertow.version>2.0.30.SP4-redhat-00001</undertow.version>
 
     <!-- CXF version, to be kept in sync with the one referenced by camel version above -->
-    <cxf.version>3.3.6.fuse-780018</cxf.version>
+    <cxf.version>3.3.6.fuse-780029</cxf.version>
     <wss4j.version>2.2.2</wss4j.version>
 
     <!-- Don't fork based on cores, doesn't work nicely in the cloud -->
@@ -242,51 +242,6 @@
       <id>release</id>
       <build>
         <plugins>
-
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-deploy-plugin</artifactId>
-            <configuration>
-              <skip>true</skip>
-            </configuration>
-          </plugin>
-
-          <plugin>
-            <groupId>org.sonatype.plugins</groupId>
-            <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>1.6.8</version>
-            <executions>
-              <execution>
-                <id>default-deploy</id>
-                <phase>deploy</phase>
-                <goals>
-                  <goal>deploy</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-              <serverId>oss-sonatype-staging</serverId>
-            </configuration>
-          </plugin>
-
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.6</version>
-            <configuration>
-              <skip>false</skip>
-            </configuration>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
 
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
