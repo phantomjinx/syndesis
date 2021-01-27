@@ -1,6 +1,3 @@
-
-VERSION := 1.0.1
-
 #
 # Make Options
 #
@@ -27,18 +24,17 @@ create:
   done
 	#@ Remove sync rules from Makefiles
 	for f in `find $(INSTALLDIR) -name Makefile`; do \
-		echo -e "sync:\n  #@ Not required in release" > $$f; \
+		echo "sync:" > $$f; \
+		echo "  #@ Not required in release" >> $$f; \
 	done
 	#@ Copy the root Makefile into build directory
 	cp -f ../Makefile $(INSTALLDIR)/
 
 release: sync create
-ifndef VERSION
-	$(error VERSION is not set)
+ifndef RELEASE_VERSION
+	$(error RELEASE_VERSION is not set)
 endif
-	tar zcvf syndesis-install-release-$(VERSION).tar.gz $(INSTALLDIR)
-	#@ Hand off to the release script
-	./release.sh $(VERSION)
+	tar zcvf syndesis-install-release-$(RELEASE_VERSION).tar.gz $(INSTALLDIR)
 
 clean:
 	rm -rf syndesis *.tar.gz
