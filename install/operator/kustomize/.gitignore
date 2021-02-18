@@ -2,3 +2,4 @@
 **/*.gen.yaml
 
 release/*-installer*
+/operator/dockerconfigjson

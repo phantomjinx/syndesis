@@ -13,7 +13,7 @@ sync:
   done
 
 INSTALLDIR := $(RELEASE_NAME)-installer
-RELEASEDIRS := ../app ../bases ../dev ../operator ../product ../setup ../setup-jaeger
+RELEASEDIRS := ../app ../bases ../dev ../operator ../setup ../setup-jaeger ../scripts
 
 check-vars:
 ifndef RELEASE_VERSION
