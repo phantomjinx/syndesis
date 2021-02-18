@@ -12,10 +12,10 @@ DEPLOYMENT := ./deployment.gen
 OPERATOR_INSTALL := ./operator-install.gen
 
 # User customisable variables
-DB_IMAGE ?= centos/postgresql-10-centos7
-IMAGE ?= quay.io/syndesis/syndesis-operator
+DB_IMAGE ?= registry.redhat.io/rhscl/postgresql-10-rhel7:1-59
+IMAGE ?= registry.redhat.io/fuse7/fuse-online-operator
 NAMESPACE ?= syndesis
-TAG ?= 1.12
+TAG ?= 1.9
 
 .PHONY: sync init
 

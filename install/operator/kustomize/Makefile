@@ -7,9 +7,9 @@ MK_OPTIONS := -s
 # Vars that can be overridden by external env vars
 #
 DEBUG ?= false
-DB_IMAGE ?= centos/postgresql-10-centos7
-IMAGE ?= quay.io/syndesis/syndesis-operator
-TAG ?= 1.12
+DB_IMAGE ?= registry.redhat.io/rhscl/postgresql-10-rhel7:1-59
+IMAGE ?= registry.redhat.io/fuse7/fuse-online-operator
+TAG ?= 1.9
 NAMESPACE ?= syndesis
 KUBE_USER ?= developer
 
@@ -56,9 +56,24 @@ else
 endif
 
 #
+# Checks for a syndesis-pull-secret for accessing the
+# Red Hat registry. If not present then it request credentials
+# and creates accordingly.
+#
+secret: kubectl
+	#@ Credentials required for accessing the redhat registry
+	kubectl get secret syndesis-pull-secret &> /dev/null || (\
+	 read -p "enter username for registry.redhat.io and press [ENTER]: " username; \
+	 read -p "enter password for registry.redhat.io and press [ENTER]: " password; \
+	 read -p "enter email address for registry.redhat.io and press [ENTER]: " email; \
+	 kubectl create secret docker-registry syndesis-pull-secret \
+		 --docker-server=registry.redhat.io \
+		 --docker-username=$$username --docker-password=$$password --docker-email=$$email)
+
+#
 # Install the operator deployment and related resources
 #
-operator: kubectl
+operator: secret
 	$(MAKE) $(MK_OPTIONS) -C bases/deployment init
 	#@ Must be invoked by <user> previously granted permissions using `KUBE_USER=<user> make setup`
 ifeq ($(DEBUG), false)
@@ -70,7 +85,7 @@ endif
 #
 # Installs the operator deployment and in addition installs a default CR
 #
-app: kubectl
+app: secret
 	$(MAKE) $(MK_OPTIONS) -C bases/deployment init
 	$(MAKE) $(MK_OPTIONS) -C app init
 	#@ Must be invoked by <user> previously granted permissions using `KUBE_USER=<user> make setup`
