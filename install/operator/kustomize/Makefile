@@ -12,6 +12,7 @@ IMAGE ?= registry.redhat.io/fuse7/fuse-online-operator
 TAG ?= 1.9
 NAMESPACE ?= syndesis
 KUBE_USER ?= developer
+RELEASE_VERSION ?= 7.9
 
 .PHONY: kubectl setup setup-jaeger operator app dev-operator dev-app
 

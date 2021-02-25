@@ -6,6 +6,7 @@ USER_VAR := {KUBE_USER}
 TAG_VAR := {TAG}
 IMAGE_VAR := {IMAGE}
 DB_IMAGE_VAR := {DB_IMAGE}
+RELEASE_VERSION_VAR := {RELEASE_VERSION}
 
 ROLENAME := syndesis-operator
 DEPLOYMENT := ./deployment.gen
@@ -16,6 +17,7 @@ DB_IMAGE ?= registry.redhat.io/rhscl/postgresql-10-rhel7:1-59
 IMAGE ?= registry.redhat.io/fuse7/fuse-online-operator
 NAMESPACE ?= syndesis
 TAG ?= 1.9
+RELEASE_VERSION ?= 7.9
 
 .PHONY: sync init
 
@@ -45,6 +47,7 @@ sync:
 	sed -i 's/{{.Tag}}/$(TAG_VAR)/' $(DEPLOYMENT).$(TMPL)
 	sed -i 's/{{.Image}}/$(IMAGE_VAR)/' $(DEPLOYMENT).$(TMPL)
 	sed -i 's/{{.DatabaseImage}}/$(DB_IMAGE_VAR)/' $(DEPLOYMENT).$(TMPL)
+	sed -i 's/{{.Version}}/$(RELEASE_VERSION_VAR)/' $(DEPLOYMENT).$(TMPL)
 	sed -i '/{{- \|{{else}}\|{{end}}\|^$$/d' $(DEPLOYMENT).$(TMPL)
 # end-sync
 
@@ -55,4 +58,5 @@ init: sync
 		sed -i 's/$(TAG_VAR)/$(TAG)/' $${resource}.$(YAML); \
 		sed -i 's~$(IMAGE_VAR)~$(IMAGE)~' $${resource}.$(YAML); \
 		sed -i 's~$(DB_IMAGE_VAR)~$(DB_IMAGE)~' $${resource}.$(YAML); \
+		sed -i 's~$(RELEASE_VERSION_VAR)~$(RELEASE_VERSION)~' $${resource}.$(YAML); \
 	done
